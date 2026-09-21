@@ -1,0 +1,19 @@
+{
+  "schema": "nightjar-asset-metadata/1",
+  "revision": 0,
+  "description": "Half lit, half not — the only phase where the terminator is a straight line. Piece 3 of 6 in Phases of One Night, a demonstration NFT collection on the Nightjar regtest devnet.",
+  "logo": {
+    "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/2.png",
+    "b2": "Ryja4l7GmcumxOfCY6L_lvusXMxW4zJ_5FvYfTz0s80",
+    "mime": "image/png",
+    "width": 512,
+    "height": 512
+  },
+  "website": "https://nightjar.cash/",
+  "links": [
+    {
+      "rel": "github",
+      "uri": "https://github.com/micovi/nightjar-assets"
+    }
+  ]
+}

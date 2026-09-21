@@ -1,0 +1,19 @@
+{
+  "schema": "nightjar-asset-metadata/1",
+  "revision": 0,
+  "description": "The night begins with nothing to see by. The frame is the same in every piece; only the light changes. Piece 1 of 6 in Phases of One Night, a demonstration NFT collection on the Nightjar regtest devnet.",
+  "logo": {
+    "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/0.png",
+    "b2": "iBA6w8F1WvtS1MI7FL9Ci3Z4BWi6KDqIF6rfKRN29Mg",
+    "mime": "image/png",
+    "width": 512,
+    "height": 512
+  },
+  "website": "https://nightjar.cash/",
+  "links": [
+    {
+      "rel": "github",
+      "uri": "https://github.com/micovi/nightjar-assets"
+    }
+  ]
+}

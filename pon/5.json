@@ -1,0 +1,19 @@
+{
+  "schema": "nightjar-asset-metadata/1",
+  "revision": 0,
+  "description": "The one night the sequence breaks. Copper instead of bone, and the stars come back. Piece 6 of 6 in Phases of One Night, a demonstration NFT collection on the Nightjar regtest devnet.",
+  "logo": {
+    "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/5.png",
+    "b2": "xAB-KqpKYmmA-eh5h3oT0QdTUwAf34r7V01JfVqA2uw",
+    "mime": "image/png",
+    "width": 512,
+    "height": 512
+  },
+  "website": "https://nightjar.cash/",
+  "links": [
+    {
+      "rel": "github",
+      "uri": "https://github.com/micovi/nightjar-assets"
+    }
+  ]
+}

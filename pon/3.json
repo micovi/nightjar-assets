@@ -1,0 +1,19 @@
+{
+  "schema": "nightjar-asset-metadata/1",
+  "revision": 0,
+  "description": "More light than dark, and the stars begin to lose. Piece 4 of 6 in Phases of One Night, a demonstration NFT collection on the Nightjar regtest devnet.",
+  "logo": {
+    "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/3.png",
+    "b2": "DLfD5JT58d6bDp2yGkSyYRIldmfTSLKT0aNP7RNroKQ",
+    "mime": "image/png",
+    "width": 512,
+    "height": 512
+  },
+  "website": "https://nightjar.cash/",
+  "links": [
+    {
+      "rel": "github",
+      "uri": "https://github.com/micovi/nightjar-assets"
+    }
+  ]
+}
