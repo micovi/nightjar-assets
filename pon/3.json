@@ -1,10 +1,10 @@
 {
   "schema": "nightjar-asset-metadata/1",
   "revision": 0,
-  "description": "More light than dark, and the stars begin to lose. Piece 4 of 6 in Phases of One Night, a demonstration NFT collection on the Nightjar regtest devnet.",
+  "description": "Piece 4 of 100 in Phases of One Night. The frame never changes; the light does. Palette: verdigris. A demonstration collection on the Nightjar regtest devnet — each piece is its own asset capped at one, so its uniqueness is checked by every verifier rather than claimed here.",
   "logo": {
     "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/3.png",
-    "b2": "DLfD5JT58d6bDp2yGkSyYRIldmfTSLKT0aNP7RNroKQ",
+    "b2": "H8gdcpp5Y3Yy77bINVAVl5Rmvb5dSiIY4ZILJx-JpnI",
     "mime": "image/png",
     "width": 512,
     "height": 512

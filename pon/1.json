@@ -1,10 +1,10 @@
 {
   "schema": "nightjar-asset-metadata/1",
   "revision": 0,
-  "description": "First light on the rim. A sliver is enough to navigate by, which is the whole argument of the series. Piece 2 of 6 in Phases of One Night, a demonstration NFT collection on the Nightjar regtest devnet.",
+  "description": "Piece 2 of 100 in Phases of One Night. The frame never changes; the light does. Palette: cold light. A demonstration collection on the Nightjar regtest devnet — each piece is its own asset capped at one, so its uniqueness is checked by every verifier rather than claimed here.",
   "logo": {
     "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/1.png",
-    "b2": "1y7CbpvgBLuE6gUA8rWyFqZkJgl85UHVcddkGHJkdQ0",
+    "b2": "9WII7jEfHhDJkOtMUpZzMBujqMPdsEHnmJQZ9wHHua8",
     "mime": "image/png",
     "width": 512,
     "height": 512

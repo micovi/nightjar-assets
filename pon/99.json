@@ -1,0 +1,19 @@
+{
+  "schema": "nightjar-asset-metadata/1",
+  "revision": 0,
+  "description": "Piece 100 of 100 in Phases of One Night. The frame never changes; the light does. Palette: violet. A demonstration collection on the Nightjar regtest devnet — each piece is its own asset capped at one, so its uniqueness is checked by every verifier rather than claimed here.",
+  "logo": {
+    "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/99.png",
+    "b2": "MNDkudujs0NDrN-S6g_DnLygAymHJgv80HelKH3DRLo",
+    "mime": "image/png",
+    "width": 512,
+    "height": 512
+  },
+  "website": "https://nightjar.cash/",
+  "links": [
+    {
+      "rel": "github",
+      "uri": "https://github.com/micovi/nightjar-assets"
+    }
+  ]
+}

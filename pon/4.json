@@ -1,10 +1,10 @@
 {
   "schema": "nightjar-asset-metadata/1",
   "revision": 0,
-  "description": "Everything visible, nothing private. The brightest piece and the least interesting sky. Piece 5 of 6 in Phases of One Night, a demonstration NFT collection on the Nightjar regtest devnet.",
+  "description": "Piece 5 of 100 in Phases of One Night. The frame never changes; the light does. Palette: violet. A demonstration collection on the Nightjar regtest devnet — each piece is its own asset capped at one, so its uniqueness is checked by every verifier rather than claimed here.",
   "logo": {
     "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/4.png",
-    "b2": "7cQ5YcoQb6h-9sNEi7yWK9IUW_Yus2MCLkQorw-P4iw",
+    "b2": "fOXZaREWJ3RLLBQ-y4PnWNw_5N2Y0Sy7-2S-PpFNsbg",
     "mime": "image/png",
     "width": 512,
     "height": 512
