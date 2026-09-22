@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check and re-target the metadata documents of both worked examples.
 
-Three subcommands, none of which needs a node, a devnet or a network:
+Three subcommands, none of which needs a node, a running channel or a network:
 
     tools/doc.py verify                     every digest, every limit, the uri budget
     tools/doc.py retarget --base <url>      point both documents at a different fork

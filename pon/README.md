@@ -194,36 +194,31 @@ pieces exist is public while *which* you hold is private, so an issuer who pays 
 recipient has demonstrated nothing. `mint.sh` pays the first three away, sells one, and leaves the
 rest with the issuer.
 
-## What is deployed
+## What is deployed, and why no id is written down here
 
-Recorded **2026-09-22**, `regtest`, `channel_id`
-`3d209fc7f081aef07b1aad9b2d1addfcac940afe6aab0c1dc98a8fd818e623f3`, `circuit_version 4`, at
-canonical height 968. These ids do not survive a devnet rebuild.
-
-`collection_id` `c3d9066bfe739238bdf9aa2b3b325eaf9bbd7e16e8a767aac9f0cac0697b5004`, **15 members
-minted** so far, indices 0 through 14, each `max_supply 1`, `decimals 0`, symbol `PON`. Ask the
-channel for the current figure rather than this paragraph:
+Nothing in this file records a `collection_id`, an `asset_id`, a height, or how many members
+exist. `collection_id` is derived from the issuer's key, the collection label and the
+`channel_id`, and the `channel_id` from a wallet's `uivk` — so the same commands run against your
+node give different ids from anyone else's, and an id copied into a README is a claim about one
+deployment at one moment. The member count is worse still: it is not fixed even on one channel,
+because a collection is launched rather than completed. Ask the channel:
 
 ```sh
-curl -s http://127.0.0.1:8787/api/assets | jq '[.items[] | select(.symbol=="PON")] | length'
+./target/release/nightjar assets --uivk <channel uivk> --keys .devnet/keys
+curl -s http://127.0.0.1:8787/api/assets | jq '.items[] | select(.symbol=="PON")'
 ```
 
-The deployed members split in a way worth recording, because it is a demonstration of the rule
-this repository is about:
+Wrap that filter in an array and pipe it to `length` and you have the member count, which is
+the only place the count is true: not `size` in `c.json`, and not a paragraph here.
 
-- **indices 0–9** were named with a bare `uri` — no `#b2=` — and are permanently unpinned. Their
-  documents are revocable by whoever controls the host, which is not the set of parties who signed
-  the assets, and no re-naming can fix it (`spec/transition-v0.md` §9 step 4).
-- **indices 10–14** were named with
-  `.../pon/c.json#b2=mY91MleM8ImeyjNqbb1kEYZEHpn1xu7fGBRFN8-pKzA`, which matched the document's
-  bytes exactly as they stood at revision 3.
+What is worth reading in that report is each member's `uri`, and there are two ways it can be
+dead. Named with a bare `uri` — no `#b2=` — a member is permanently unpinned: its document is
+revocable by whoever controls the host, which is not the set of parties who signed the asset, and
+`ASSET` is first-valid-wins (`spec/transition-v0.md` §9 step 4), so no re-naming can fix it.
+Named with a pin, the member is fixed to the document's bytes as they stood when the message was
+signed — so republishing `c.json` with different bytes means a conforming wallet fetches it, finds
+the digest does not match, discards it without retrying, and shows the collection with no metadata
+at all.
 
-Both halves are now broken, for different reasons, and both are being re-minted. The unpinned five
-point at `pon/c.json`, which still exists but whose `item.image` template this restructure moved to
-`pon/art/{index}.png`. The pinned five point at a digest of the revision-3 bytes, and this
-revision is 4 — so a conforming wallet will fetch the document, find the digest does not match,
-and discard it without retrying, which is the correct behaviour and leaves the collection with no
-metadata at all.
-
-That is what §2.1's correction and §6 T3 look like when they actually happen: a pinned document is
+That is what §2.1's correction and §6 T3 look like when they actually bite. A pinned document is
 safer than an unpinned one and **harder to change**, and the two properties are the same property.

@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Shared plumbing for nc/mint.sh and pon/mint.sh.
 #
-# The split is deliberate. **This file is devnet housekeeping**: funding a wallet, mining enough
-# blocks, parsing ids out of CLI output. **The mint scripts are the lesson**: which messages are
-# sent, in which order, and why. If you are reading to learn what deploying an asset costs in
-# messages, read nc/mint.sh and pon/mint.sh; this file is what makes them run.
+# The split is deliberate. **This file is housekeeping for whatever network you run it against**:
+# funding a wallet, mining enough blocks, parsing ids out of CLI output. **The mint scripts are
+# the lesson**: which messages are sent, in which order, and why. If you are reading to learn
+# what deploying an asset costs in messages, read nc/mint.sh and pon/mint.sh; this file is what
+# makes them run.
 #
 # Nothing here is Nightjar-specific except the CLI invocations, and every one of those is taken
-# from a script in the Nightjar repository that runs against a live devnet:
+# from a script in the Nightjar repository that runs against a live node:
 # `scripts/devnet-testassets.sh` (issue, name, pay) and `scripts/devnet-programs.sh`
 # (sell, publish, orders, buy).
 
@@ -28,8 +29,8 @@ NO_SALE=0
 # `spec/transition-v0.md` section 7: the wallet builds only against blocks a reorganization can
 # no longer move, so a note is invisible to the next command until it is FINALITY_DEPTH deep.
 # Mint and immediately pay and you get a confusing `insufficient funds: 0 ... available` several
-# steps from its cause. The devnet reports its own depth — `curl -s $INDEXER/api/status | jq
-# .info.finality_depth`, 10 at the time of writing — and this is deliberately two more.
+# steps from its cause. The node reports its own depth — `curl -s $INDEXER/api/status | jq
+# .info.finality_depth` — and this default is deliberately two more than the 10 it reports.
 FINALITY="${FINALITY:-12}"
 
 usage_common() {
@@ -39,9 +40,10 @@ usage_common() {
                      The document must already be reachable there: the pin is computed from
                      the published bytes, before the naming message is signed.
   --recipient NJ     an `nj…` address to pay to. Default: the buyer wallet this script creates.
-  --dry-run          print the exact sequence of messages and send nothing. Needs no devnet.
+  --dry-run          print the exact sequence of messages and send nothing. Needs no node.
   --allow-unpinned   name the asset with a bare `uri`, with no `#b2=`. PERMANENT: see README.md.
-  --devnet DIR       default .devnet (or $NIGHTJAR_DEVNET_DIR)
+  --devnet DIR       where the wallets and proving keys live.
+                     default .devnet (or $NIGHTJAR_DEVNET_DIR)
   --bin PATH         default ./target/release/nightjar (or $NIGHTJAR_BIN)
   --no-sale          stop after issue/name/pay; do not post a sale or buy it
 USAGE
@@ -149,13 +151,13 @@ pin() {   # url -> url#b2=<digest>
 }
 
 # ---------------------------------------------------------------------------------------------
-# Devnet plumbing.
+# Node plumbing.
 
 preflight() {
   [ "$DRY_RUN" = 1 ] && return 0
   [ -x "$NJ_BIN" ]        || fail "no $NJ_BIN — in the Nightjar repository: cargo build --release -p nightjar-cli"
   [ -d "$KEYS" ]          || fail "no $KEYS — run: $NJ_BIN zk-setup --keys $KEYS"
-  [ -d "$DEVNET/channel" ]|| fail "no $DEVNET/channel — start the devnet from infra/README.md in the Nightjar repository"
+  [ -d "$DEVNET/channel" ]|| fail "no $DEVNET/channel — start the local network from infra/README.md in the Nightjar repository"
 }
 
 nj()   { "$NJ_BIN" "$@"; }

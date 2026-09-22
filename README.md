@@ -15,10 +15,14 @@ unit of money and a unique piece of art are, in this protocol, almost the same o
 `nc/transfer.roost` and `pon/transfer.roost` together: identical policy, identical 34 bytes,
 identical Poseidon377 root. Everything that distinguishes them is in `asset_id`.
 
+Both sequences have been run end to end — issue, name, pay, sell, buy — against a Nightjar
+channel on a **local Zcash test network** (regtest), which is not Zcash's public testnet and not
+mainnet.
+
 ## Run them
 
 Each example ships a `mint.sh` that does the whole sequence, and takes `--dry-run`, which needs
-no devnet, sends nothing, and prints the exact commands:
+no node, sends nothing, and prints the exact commands:
 
 ```sh
 nc/mint.sh  --dry-run --base-url https://raw.githubusercontent.com/micovi/nightjar-assets/main/
@@ -33,8 +37,9 @@ message signs is computed from the document published at that URL, so a script t
 one GitHub account would be a worked example for nobody else. `tools/doc.py retarget --base <url>`
 rewrites the absolute URLs inside the documents to match.
 
-To actually send anything you need a Nightjar devnet (`infra/README.md` in the Nightjar
-repository), `cargo build --release -p nightjar-cli`, and proving keys in `.devnet/keys`.
+To actually send anything you need a Nightjar node of your own on a local Zcash test network
+(`infra/README.md` in the Nightjar repository), `cargo build --release -p nightjar-cli`, and
+proving keys in `.devnet/keys`.
 
 Check the documents against the files they point at, at any time, with no network:
 
@@ -69,12 +74,12 @@ naming against a document that is not up yet means being unpinned for good, or p
 nobody will ever be served. `--allow-unpinned` exists, prints a warning that says *never*, and is
 the honest way to take that decision on purpose.
 
-**This repository was restructured anyway, and it is worth being exact about why that was
-allowed.** Every path here moved: `nc.json` became `nc/a.json`, `pon/0.png` became
-`pon/art/0.png`. The assets already named against the old paths on the current devnet are
-therefore broken, and the answer is that they are being re-minted from scratch — a devnet
-rebuild changes every `asset_id` in any case. **That is the only moment the rule is free: before
-an asset has any users.** After it, the layout is not yours to change.
+**The rule has exactly one exemption, and it is worth being exact about it.** A layout may
+still be moved while nothing has been named against it — or while the only assets that have are
+on a network about to be thrown away, since rebuilding one changes every `asset_id` in any case.
+**That is the only moment the rule is free: before an asset has any users.** After it, the
+layout is not yours to change, and no amount of care about where a file *ought* to live buys
+back a `uri` that has been signed.
 
 ## What the layout is, and why the directories have short names
 
@@ -98,7 +103,7 @@ pon/                   worked example 2 — a collection of unique pieces
   variations.roost     royalties and issuer-gated resale — neither deployed
   mint.sh              two messages per member, one document for all of them
 tools/
-  lib.sh               devnet plumbing shared by both mint scripts
+  lib.sh               node plumbing shared by both mint scripts
   doc.py               verify / retarget / regenerate digests
 ```
 
@@ -148,12 +153,16 @@ very much whether they are: a document can say anything, and the things that dec
 checked against the channel.
 
 **Ids are perishable, and this is not a caveat but the normal case.** A channel is born from a
-wallet's `uivk`, so every devnet rebuild produces a new `channel_id`; `collection_id` is derived
-from the issuer's key, a label and that `channel_id`, and `asset_id` from `collection_id`, the
-label, the index and the supply cap. So every rebuild changes every id. The two example READMEs
-record what was deployed on the day they were written so that the repository can be checked
-against the channel on the day it is read, not so the ids can be quoted later. If they do not
-match what your node reports, the devnet has been rebuilt.
+wallet's `uivk`, so every rebuild of the network produces a new `channel_id`; `collection_id` is
+derived from the issuer's key, a label and that `channel_id`, and `asset_id` from
+`collection_id`, the label, the index and the supply cap. So every rebuild changes every id.
+
+That is why no `channel_id`, no `collection_id` and no `asset_id` is written down anywhere in
+this repository, and the absence is the honest form rather than an omission. An id in a file is a
+claim about one deployment at one moment; a reader running these examples has a different
+deployment and a later moment, and every id they produce will differ from every id anyone else
+produces. The commands below are the answer to *what are the ids*, and they are the only answer
+that is true on the day it is read.
 
 ## Checking the repository against the channel
 
@@ -169,10 +178,10 @@ tools/doc.py verify
 ```
 
 `verify` checks every artwork digest in `pon/c.json`, `logo.b2` in both documents, every size
-limit of `spec/asset-metadata-v0.md` §3.2, and the uri budget above. As of this writing all 100
-digests verify, `nc/a.json` is 898 bytes and `pon/c.json` is 6 047 bytes against the 16 KiB
-document limit, and the hundred artworks total 279 110 bytes against the 512 KiB per-asset
-ceiling — which is what makes §2.1's fetch-every-member option affordable here.
+limit of `spec/asset-metadata-v0.md` §3.2, and the uri budget above. All 100 digests verify,
+`nc/a.json` is 921 bytes and `pon/c.json` is 6 070 bytes against the 16 KiB document limit, and
+the hundred artworks total 279 110 bytes against the 512 KiB per-asset ceiling — which is what
+makes §2.1's fetch-every-member option affordable here.
 
 A digest that does not verify is worse than no digest at all: the spec requires a wallet to
 discard a mismatching image without retrying, so the failure is silent and the artwork simply

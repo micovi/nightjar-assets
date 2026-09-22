@@ -1,7 +1,7 @@
 {
   "schema": "nightjar-asset-metadata/1",
   "revision": 1,
-  "description": "NightCash is the fungible worked example of this repository: a demonstration asset on the Nightjar regtest devnet, 8 decimals, capped at 100,000,000 display units by a number hashed into its own identity. The document exists to exercise asset-metadata-v0 end to end — a pinned logo, a description, and links a wallet renders only after the user accepts the asset.",
+  "description": "NightCash is the fungible worked example of this repository: a demonstration asset on a Nightjar channel over a local Zcash test network, 8 decimals, capped at 100,000,000 display units by a number hashed into its own identity. The document exists to exercise asset-metadata-v0 end to end — a pinned logo, a description, and links a wallet renders only after the user accepts the asset.",
   "logo": {
     "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/nc/logo.png",
     "b2": "RektL4jXgwwRJAUEOTLGd_3viaHq5_kMd4ftaAayuGo",

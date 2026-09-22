@@ -5,7 +5,7 @@
 #   pon/mint.sh --count 10 --base-url https://raw.githubusercontent.com/you/nightjar-assets/main/
 #   pon/mint.sh --from 10 --count 90 --no-sale --base-url ...      # resume, mint only
 #
-# Run it with --dry-run first. It needs no devnet and sends nothing.
+# Run it with --dry-run first. It needs no node and sends nothing.
 #
 # **Two messages per member, and one document for all of them.** That is the whole shape of a
 # Nightjar collection:

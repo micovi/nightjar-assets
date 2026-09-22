@@ -145,7 +145,7 @@ Three places the order is not a preference:
   from the published bytes, and `ASSET` is first-valid-wins (§9 step 4): the first naming is the
   only one. `tools/lib.sh`'s `pin()` fetches and fails rather than warning, for that reason.
 - **enough blocks between minting a note and spending it.** A note is not selectable until it is
-  `FINALITY_DEPTH` blocks deep (`spec/transition-v0.md` §7); the devnet reports 10 and the script
+  `FINALITY_DEPTH` blocks deep (`spec/transition-v0.md` §7); the node reports 10 and the script
   waits 12. Skip it and you get `insufficient funds: 0 ... available` several steps from its
   cause.
 
@@ -162,27 +162,23 @@ A wallet must **not** fetch this document because it holds a NightCash note — 
 the system exists to hide, and a fetch tells the host that someone at that address is looking at
 that asset (§3.1). Acceptance is the trigger, and acceptance is a disclosure the user chose.
 
-## What is deployed
+## What is deployed, and why no id is written down here
 
-Recorded **2026-09-22**, `regtest`, `channel_id`
-`3d209fc7f081aef07b1aad9b2d1addfcac940afe6aab0c1dc98a8fd818e623f3`, `circuit_version 4`, at
-canonical height 968. These ids do not survive a devnet rebuild; the repository README says why.
+Nothing in this file records an `asset_id`, a `collection_id`, a `channel_id` or a height. That is
+the honest form rather than an omission: a channel is born from a wallet's `uivk` and every id
+below it derives from that, so the same sequence run against your node produces ids that are not
+the ones anybody else's run produced. An id in a README is a claim about one deployment at one
+moment, and a reader of it has neither. Ask the channel you ran this against:
 
-| | |
-|---|---|
-| `asset_id` | `1c9339156f2a6402a51a423f95a4afcfb54335c8505b08bb5c3c970e47cdee05` |
-| `collection_id` | `e4fe94e1bc2906f0112c05d9b8d914247801e1c062e2e4569dafecb92301e602` |
-| name, symbol, decimals | NightCash, NC, 8 |
-| `max_supply` | `10000000000000000` (100,000,000 NC) |
-| issued so far | `100000000000000` (1,000,000 NC) |
-| `uri` | `https://raw.githubusercontent.com/micovi/nightjar-assets/main/nc.json` |
+```sh
+./target/release/nightjar assets --uivk <channel uivk> --keys .devnet/keys
+curl -s http://127.0.0.1:8787/api/assets | jq '.items[] | select(.symbol=="NC")'
+```
 
-**That `uri` is stale in two ways and both are the lesson of this repository.** It is *unpinned* —
-no `#b2=` — so the document is revocable by whoever controls the host, which is not the set of
-parties who signed the asset; a wallet reading it should say the metadata is unpinned wherever it
-says where the metadata came from. And it points at `nc.json` at the repository root, which this
-restructure moved to `nc/a.json`, so it now resolves to nothing.
-
-Neither is fixable. `ASSET` is first-valid-wins, so this `asset_id` can never be re-named. The
-asset is being re-minted, which is the only remedy there is and is available only because nothing
-holds it but a devnet. `mint.sh` is what will do it, and it pins.
+Two fields in that report repay reading closely, because neither is fixable afterwards.
+`max_supply` is hashed into `asset_id`, so it is the cap this asset will ever have — a different
+cap is a different asset. And the `uri` is the one signed for good: `ASSET` is first-valid-wins
+(§9 step 4), so an asset named with a bare `uri` can never be re-named with a pinned one, and one
+named against a path that later moves resolves to nothing for the life of the channel. A wallet
+reading an unpinned `uri` should say the metadata is unpinned wherever it says where the metadata
+came from.

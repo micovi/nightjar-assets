@@ -4,7 +4,7 @@
 #   nc/mint.sh --dry-run --base-url https://raw.githubusercontent.com/you/nightjar-assets/main/
 #   nc/mint.sh           --base-url https://raw.githubusercontent.com/you/nightjar-assets/main/
 #
-# Run it with `--dry-run` first. It needs no devnet, sends nothing, and prints the exact
+# Run it with `--dry-run` first. It needs no node, sends nothing, and prints the exact
 # sequence; that output is what the README's command blocks are.
 #
 # Five messages, and the order of the first two is forced by the protocol while the order of the

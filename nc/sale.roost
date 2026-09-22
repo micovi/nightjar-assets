@@ -11,7 +11,7 @@
 // Both are the policies the shipped CLI builds, not designs invented for this repository:
 // `programs::reservation_policy` (`crates/nightjar-cli/src/programs.rs:223`) and
 // `programs::offer_policy` (`:282`). `scripts/devnet-programs.sh` in the Nightjar repository is
-// the end-to-end that exercises both against a running devnet.
+// the end-to-end that exercises both against a running node.
 
 // ---------------------------------------------------------------------------------------------
 // 1. Reservation — a lot for ZEC, from a named buyer. `wallet sell` / `wallet buy`.
