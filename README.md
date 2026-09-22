@@ -102,25 +102,33 @@ tools/
   doc.py               verify / retarget / regenerate digests
 ```
 
-The example directories are called `nc` and `pon` rather than something readable, and that is
-not terseness for its own sake. `uri_len ≤ 128` (`spec/transition-v0.md` §9), a `#b2=` pin costs
-47 of those bytes, and what is left is **81 bytes for scheme, host and path**. The canonical base
-here is 62 of them:
+A signed `uri` has a byte budget, and it is worth knowing how to spend it before you choose a
+layout. `uri_len ≤ 255` (`spec/transition-v0.md` §9) and a `#b2=` pin costs 47 of those bytes,
+leaving **208 for scheme, host and path**. The canonical base here is 62 of them:
 
 ```
 https://raw.githubusercontent.com/micovi/nightjar-assets/main/     62
                                                      nc/a.json     71  + 47 = 118 ✓
                                                     pon/c.json     72  + 47 = 119 ✓
-                                     nc/metadata/asset.json        84  + 47 = 131 ✗
-             examples/02-collection/metadata/collection.json      109  + 47 = 156 ✗
+             examples/02-collection/metadata/collection.json      109  + 47 = 156 ✓
 ```
 
-A conventional `examples/<long-name>/metadata/` tree does not fit, and a fork whose owner or
-repository name is longer than `micovi/nightjar-assets` has less room than this. So the pinned
-document sits two path segments deep with a one-letter filename, and everything that is *not*
-in a signed `uri` — the artwork under `pon/art/`, the READMEs, the Roost sources, the scripts —
-is named for what it is. `tools/lib.sh` refuses to mint if the arithmetic does not clear, which
-is a better place to find out than after the naming message is signed.
+**That budget used to choose this layout, and no longer does.** `uri_len` was 128 when these
+examples were written, which left 81 bytes rather than 208 — enough for `nc/a.json` and not for
+anything with a readable directory name in it. The limit was raised to 255 for exactly that
+reason: a limit that dictates the shape of a repository is the wrong way round. `nc` and `pon`
+are now just short names — the asset's symbol and the collection's — kept because renaming them
+would break every `uri` already signed, not because the arithmetic demands it.
+
+The budget has not gone away, it has stopped binding at this depth. 255 is a hard ceiling rather
+than a chosen number: `uri_len` is a `u8`, so no larger value can be expressed on the wire at all.
+A fork whose owner or repository name is much longer than `micovi/nightjar-assets` has less room
+than the table above, and a document too deep to carry its pin is a document that **cannot be
+pinned** — not one that is silently unpinned. `tools/lib.sh` refuses to mint when the arithmetic
+does not clear, which is a better place to find out than after the naming message is signed.
+
+Everything that is *not* in a signed `uri` — the artwork under `pon/art/`, the READMEs, the Roost
+sources, the scripts — is named for what it is, and always could be.
 
 ## Nothing here is authoritative
 
