@@ -22,13 +22,14 @@
 # to lie about which piece is which. Ten separate pins would also be ten chances to catch the
 # host mid-edit and sign ten different digests for one file.
 #
-# **Earlier still, when there is one, comes the digest table.** A collection past 302 members
-# carries `digest_table` in place of `digests` (spec/asset-collection-v0.md section 3.3.1), and
-# the document then holds the table's digest — so the table must be published and hashed before
-# the document is pinned, and no later step reports getting that backwards. tools/lib.sh's
-# check_published_table has the order and the argument. This collection is a hundred members and
-# carries `digests` inline, so the step below it is a no-op here and is exercised by
-# `tools/doc.py selftest` instead.
+# **Earlier still, when there are any, come the files the document points at.** A collection past
+# 302 members carries `digest_table` in place of `digests` (spec/asset-collection-v0.md section
+# 3.3.1), and one whose per-piece detail will not fit carries `items_document` in place of `items`
+# (section 3.4.1). Either way the document holds that file's digest — so the file must be published
+# and hashed before the document is pinned, and no later step reports getting that backwards.
+# tools/lib.sh's check_published_table and check_published_items have the order and the argument.
+# This collection is a hundred members, carries `digests` inline and has no `items` at all, so both
+# steps below are no-ops here and are exercised by `tools/doc.py selftest` instead.
 #
 # **What this does not remove is the hundred messages.** An ASSET message names exactly one
 # asset_id, so a hundred-piece collection is a hundred issuances and a hundred namings, each with
@@ -78,11 +79,24 @@ if [ -n "$TABLE_URI" ]; then
   say "the digest table — settled before the document that commits to its bytes"
   check_published_table "$TABLE_URI" "$TABLE_B2" "$TABLE_COUNT"
 fi
-# No table and nothing to print: this collection is a hundred members, and a hundred `digests`
-# inline is a long way inside the 302 that section 3.3's 16 KiB limit allows. The table buys a
-# constant-size document at the price of a second file to keep in step, and a collection that
-# does not need the first should not pay the second. `tools/doc.py digests --table` converts,
-# and `tools/doc.py selftest` is what keeps the path above honest in the meantime.
+
+# And the items document, on the same rule and read the same way. It is a separate member with a
+# separate file and a collection may carry either, both or neither: a ten-thousand-piece drop
+# needs the table for its digests and the items document for its traits, and each is checked on
+# its own because each is published on its own.
+read -r ITEMS_URI ITEMS_B2 ITEMS_BYTES <<<"$(python3 -c 'import json; d = json.load(open("pon/c.json")).get("items_document") or {}; print(d.get("uri", ""), d.get("b2", ""), d.get("bytes", ""))')"
+
+if [ -n "$ITEMS_URI" ]; then
+  say "the items document — settled before the document that commits to its bytes and its length"
+  check_published_items "$ITEMS_URI" "$ITEMS_B2" "$ITEMS_BYTES"
+fi
+# Neither, and nothing to print: this collection is a hundred members, and a hundred `digests`
+# inline is a long way inside the 302 that section 3.3's 16 KiB limit allows, while its pieces
+# differ only in the picture `item.image` already templates. Each external form buys a document
+# that is constant in N at the price of a second file to keep in step, and a collection that does
+# not need the first should not pay the second. `tools/doc.py digests --table` and `tools/doc.py
+# items --external` convert; `tools/doc.py selftest` is what keeps both paths above honest in the
+# meantime.
 
 # One pin for the whole collection, computed before any piece is named.
 say "the shared document — one uri for every member"

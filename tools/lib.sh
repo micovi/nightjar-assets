@@ -223,6 +223,55 @@ check_published_table() {  # uri b2 count
   printf '   table %s bytes = 32 x %s, b2 %s — the bytes the document pins\n' "$n" "$count" "$got"
 }
 
+# **The items document is published before the document too, and for the same reason.**
+#
+# `spec/asset-collection-v0.md` section 3.4.1: a collection whose per-piece detail will not fit
+# inline — `items` costs about 190 bytes a member, so one attribute each runs a collection out of
+# the 16 KiB document at 81 — may instead carry
+#
+#     "items_document": { "uri": "…/pon/i.json", "b2": "…", "bytes": 1900000 }
+#
+# a file whose top level is the `items` array itself, with nothing wrapping it. Its digest lives
+# **inside the document**, exactly as the table's does, so the order is the order above with one
+# more file in it: publish the items document, write its b2 and its length into the document,
+# publish that, pin it, then name every member with the pinned uri.
+#
+# **`bytes` is the one thing this shape has that the table does not, and it is not a convenience.**
+# The table's length is `32 × count` and derivable; an items document's is not, so it is declared —
+# and declared so that a wallet knows what the fetch costs *before* it makes it and can refuse
+# rather than find out by having downloaded it. What makes the declaration worth anything is that
+# section 3.4.1 has a wallet refuse a body of any other length. So a `bytes` that is merely stale —
+# the right file, one character longer — is refused exactly as firmly as a swapped one, and it is
+# the easiest of these mistakes to make: edit one trait, republish the file, forget the document.
+#
+# Which is why this fails rather than warning, as `pin` and `check_published_table` do and for the
+# reason they do: `ASSET` is first-valid-wins (`spec/transition-v0.md` section 9 step 4), so the
+# last moment any of it is cheap is before the first naming message is signed.
+check_published_items() {  # uri b2 bytes
+  local uri="$1" want="$2" declared="$3" tmp n got
+  uri_fits "$uri"
+  uri_budget "$uri"
+
+  if [ "$DRY_RUN" = 1 ]; then
+    printf '   (fetch %s and check it is exactly %s bytes hashing to %s)\n' "$uri" "$declared" "$want"
+    return 0
+  fi
+
+  tmp=$(mktemp "${TMPDIR:-/tmp}/nj-items-document.XXXXXX")
+  curl -sfL --max-time 20 -o "$tmp" "$uri" || { rm -f "$tmp"; fail "could not fetch the items document at $uri. Publish the ITEMS DOCUMENT first and the collection document second: the collection document carries its b2 and its exact length, so a document published against an items document that is not up yet declares bytes nobody will be served."; }
+  n=$(wc -c <"$tmp" | tr -d '[:space:]')
+  got=$(b2_file "$tmp")
+  rm -f "$tmp"
+
+  # Length before digest, in that order and for a sharper reason than the table's: a wallet does
+  # not hash a body it has refused. Section 3.4.1 has it reject on the length alone, so a length
+  # reported as a digest failure would send a publisher looking for the wrong mistake.
+  [ "$n" = "$declared" ] || fail "the items document published at $uri is $n bytes and the collection document declares $declared. Section 3.4.1 has a wallet refuse a body whose length is not exactly items_document.bytes — re-run tools/doc.py items --external, publish the file, then publish the document, then run this."
+  [ "$got" = "$want" ] || fail "the items document published at $uri hashes to $got and the collection document pins $want. The file that is up is not the one the document was written against — publish the file, then re-run tools/doc.py items --external, then publish the document, then run this."
+
+  printf '   items document %s bytes, b2 %s — the bytes the document pins\n' "$n" "$got"
+}
+
 # ---------------------------------------------------------------------------------------------
 # Node plumbing.
 

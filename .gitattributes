@@ -25,3 +25,17 @@ pon/art/*.png linguist-generated=true
 # is written down anyway, because a fork that runs `tools/doc.py digests --table` commits a binary
 # that GitHub would otherwise count as source and try to diff.
 pon/d.bin binary
+
+# A collection whose per-piece detail will not fit in the document publishes it as `pon/i.json`,
+# the `items` array on its own (`spec/asset-collection-v0.md` §3.4.1). This one has no `items` at
+# all — its pieces differ only in the picture `item.image` already templates — so again no such
+# file is committed here, and again the rule is written down for the fork that runs `tools/doc.py
+# items --external`.
+#
+# **Not `binary`, and not for the language bar.** It is text, it diffs, and JSON is already data
+# to linguist rather than a language, so it stays out of the bar unaided. `linguist-generated`
+# is about **review**: the file is written by the tool from the member that would otherwise be
+# inline, so a pull request that regenerates it is thousands of lines in which nothing was
+# decided. What was decided is the `b2` and the `bytes` in `pon/c.json`, two lines away, and
+# they are what a reviewer should be looking at.
+pon/i.json linguist-generated=true
