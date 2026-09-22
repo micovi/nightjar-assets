@@ -34,10 +34,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 DEFAULT_BASE = "https://raw.githubusercontent.com/micovi/nightjar-assets/main/"
 
 # `spec/transition-v0.md` section 9: an ASSET message's `uri` is at most 255 bytes of US-ASCII.
-# 255 is the ceiling of the wire format rather than a chosen number: `uri_len` is a `u8`,
-# so nothing larger can be expressed at all. It was 128 until the limit was raised, which
-# left 81 bytes for scheme, host and path and is why this repository's pinned documents sit
-# two segments deep with one-letter filenames.
+# It is the ceiling of the wire format rather than a chosen number: `uri_len` is a `u8`, so
+# nothing larger can be expressed on the wire at all.
 URI_MAX = 255
 # `spec/asset-metadata-v0.md` section 2.1: `#b2=` plus 43 base64url characters.
 PIN_COST = len("#b2=") + 43

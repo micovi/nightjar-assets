@@ -98,10 +98,8 @@ run() {
 # The two limits that decide what a document's path may be.
 
 # `spec/transition-v0.md` section 9: `uri_len` is at most 255 bytes of US-ASCII.
-# 255 is the ceiling of the wire format rather than a chosen number: `uri_len` is a `u8`,
-# so nothing larger can be expressed at all. It was 128 until the limit was raised, which
-# left 81 bytes for scheme, host and path and is why this repository's pinned documents sit
-# two segments deep with one-letter filenames.
+# It is the ceiling of the wire format rather than a chosen number: `uri_len` is a `u8`, so
+# nothing larger can be expressed on the wire at all.
 URI_MAX=255
 # `spec/asset-metadata-v0.md` section 2.1: `#b2=` plus 43 base64url characters of digest.
 PIN_COST=47
