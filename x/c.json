@@ -3,7 +3,7 @@
   "revision": 0,
   "name": "Ten Thousand Nights",
   "description": "A ten-thousand-piece collection on a Nightjar channel over a local Zcash test network. It exists to show that the document describing it does not grow with it: every one of the ten thousand members signs this same uri.",
-  "size": 10000,
+  "max_supply": 10000,
   "item": {
     "name": "Ten Thousand Nights #{index}",
     "image": "https://raw.githubusercontent.com/micovi/nightjar-assets/bench-10k/x/art/{index}.png"
