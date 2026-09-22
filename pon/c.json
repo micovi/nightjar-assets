@@ -10,7 +10,7 @@
     "width": 512,
     "height": 512
   },
-  "size": 100,
+  "max_supply": 100,
   "item": {
     "name": "Phases of One Night #{index}",
     "image": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/art/{index}.png"

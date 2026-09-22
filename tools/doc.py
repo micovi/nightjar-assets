@@ -428,7 +428,7 @@ def verify(base: str) -> int:
     # ships both has made an error the wallet silently *papers over*, which is exactly the kind
     # this file exists to catch while it is still a local diff.
     inline = pon.get("digests")
-    size = pon.get("size")
+    cap = pon.get("max_supply")
     r.check(
         not (inline is not None and table is not None),
         "the document carries digests or digest_table, not both  (section 3.3.1)",
@@ -443,12 +443,12 @@ def verify(base: str) -> int:
             f"digest_table.count is {table.get('count')} for {art} artworks in pon/art/",
         )
         r.check(
-            table.get("count") == size,
-            f"digest_table.count is {table.get('count')} for a declared size of {size}",
+            table.get("count") == cap,
+            f"digest_table.count is {table.get('count')} for a declared max_supply of {cap}",
         )
     else:
         want = inline or []
-        r.check(len(want) == size, f"{len(want)} digests for a declared size of {size}")
+        r.check(len(want) == cap, f"{len(want)} digests for a declared max_supply of {cap}")
 
     if want is None:
         # Section 3.3.1: a failure of the length or of `b2` leaves the whole collection
@@ -642,7 +642,7 @@ def digests(table: bool) -> int:
     behind produces a document a wallet is required to read *past* rather than reject.
     """
     doc = load("pon/c.json")
-    size = doc["size"]
+    size = doc["max_supply"]
     base = base_of(doc) or DEFAULT_BASE
     raw = [raw_b2(ROOT / f"pon/art/{i}.png") for i in range(size)]
 

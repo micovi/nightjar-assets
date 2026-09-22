@@ -42,7 +42,7 @@ everything in `asset-metadata-v0.md` they are decoration that decides nothing.
 | membership of the collection | the circuit, via `collection_id` | unforgeable across issuers: `collection_id` commits to the issuer's key |
 | who may spend a piece | that note's policy | `pk(owner)` |
 | the piece's on-chain name | its own `ASSET` message, signed | one per member; there is no collection-level naming message |
-| the collection's name, artwork, size | `c.json` | nothing |
+| the collection's name, artwork, mirrored cap | `c.json` | nothing |
 
 `collection_id` is an unsalted hash of the issuer's key, the label and the channel id, so it
 reveals the issuer to anyone who already holds that key *and* knows the channel, and links that
@@ -145,13 +145,26 @@ the tail leaks, or do not cap it and no phone wallet should make that transfer s
 
 | number | what it is | where it lives |
 |---|---|---|
-| **100** | how many pieces the publisher **intends** | `size` in `c.json` |
+| **100** | how many pieces the collection may **ever** have | `collection_max_supply`, bound into `collection_id` on the channel |
+| **100** | the same number, **mirrored** for a reader | `max_supply` in `c.json` |
 | **100** | how many artworks and digests are **published** | `art/0.png` … `art/99.png`, `digests[0..99]` |
 | **grows** | how many members are **minted** so far | the channel — ask it, do not read it here |
 
-`size` is advisory. The channel decides how many members exist, and §3.1 is explicit that a wallet
-**MUST NOT** treat a member whose index is ≥ `size` as invalid. So `size` is a statement of
-intent, not a count and not a bound.
+The first is the one that decides. `transition-v0.md` §5 binds the cap into `collection_id`, so a
+member declaring a different one derives a different `collection_id` and is a member of a different
+collection — the disagreement cannot be expressed. §6 step 6f then refuses any public issuance whose
+`index` is not strictly below it. A cap of `0` means the collection has none and may be minted into
+for ever, which is the right shape for a collection with no final count.
+
+`max_supply` in `c.json` is a **mirror** of that, and is still advisory *here*: a wallet **MUST**
+compare it against the chain rather than believe it, and §3.1's older rule stands — a member whose
+index is ≥ it is not invalid, because the document does not get to decide that. Until revision 5
+this number was the only place the count existed, so it was a statement of intent. It is now a
+restatement, and a wallet that finds the two disagreeing should say so.
+
+**A cap is not a completion.** It says no member above it will ever exist; it says nothing about the
+members below it existing yet. *Three of at most a hundred* is the honest rendering. *Three of a
+hundred* is not.
 
 **The third number is deliberately not written down here, and that is the point.** A collection is
 launched, not completed: the publisher declares how many pieces there will be and puts the artwork
@@ -160,12 +173,12 @@ its first member, because `collection_id` derives from the issuer's key and the 
 from any count. Writing today's minted total into this file would make it wrong on the next mint,
 and would quietly suggest the collection is finished when the opposite is true.
 
-`size` stays at 100, and the reason is `digests`. That array has no incremental form (§6 T3): a
+`max_supply` stays at 100, and the reason is `digests`. That array has no incremental form (§6 T3): a
 collection that grows must republish the whole document, which changes its bytes and therefore any
 `#b2=` that already-signed `ASSET` messages point at — so a growing collection either goes
 unpinned or re-signs every member, and re-signing is what §9 step 4 of `transition-v0.md` refuses.
 Sizing `digests` for the final count at first publication is the answer, and it is what this
-document does. Cutting `size` to 10 would either leave 90 digests for members the document says do
+document does. Cutting `max_supply` to 10 would either leave 90 digests for members the document says do
 not exist, or drop them and forfeit the one mitigation T3 offers.
 
 Revision 4 of the spec half-closes this, and it is worth knowing which half. `digest_table`
@@ -223,7 +236,7 @@ curl -s http://127.0.0.1:8787/api/assets | jq '.items[] | select(.symbol=="PON")
 ```
 
 Wrap that filter in an array and pipe it to `length` and you have the member count, which is
-the only place the count is true: not `size` in `c.json`, and not a paragraph here.
+the only place the count is true: not `max_supply` in `c.json`, and not a paragraph here.
 
 What is worth reading in that report is each member's `uri`, and there are two ways it can be
 dead. Named with a bare `uri` — no `#b2=` — a member is permanently unpinned: its document is
