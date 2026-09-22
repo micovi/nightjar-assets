@@ -1,0 +1,106 @@
+// NightCash — variations. **Nothing in this file is deployed and nothing in this file is built
+// by any command of the Nightjar CLI.**
+//
+// It is here because "the deployed note carries `pk(owner)`" invites the reader to conclude that
+// a Nightjar note *can only* carry `pk(owner)`, and that is false. What is true is narrower and
+// more useful: the asset's rules — its cap, its divisibility, its collection — are enforced by
+// `asset_id` and the circuit, so a fungible asset needs no policy to be a fungible asset. A
+// policy buys something else, and these are two examples of what.
+//
+// To deploy either of these you would have to build the transition yourself; `wallet pay` has no
+// flag for them. `roost check` proves they compile and that their clauses behave; it proves
+// nothing about a wallet's willingness to build one.
+
+// ---------------------------------------------------------------------------------------------
+// A balance a second key can recover, but only after a height.
+//
+// The heir's branch is never published: when the owner spends, it stays a hash. That is the
+// property worth having and it is not obvious — a recovery arrangement in most systems is
+// visible to everyone from the day it is made, because it lives in an account's configuration.
+// Here the *opened* branch is what the transition reveals, so an owner who never lapses never
+// discloses that a recovery clause existed at all.
+//
+// `after(unlock)` is checked by the circuit against the leaf height the verifier bound into the
+// tree (`spec/transition-v0.md` section 7), not against a height the prover chose. That is what
+// makes the delay real rather than advisory.
+
+note Recoverable(owner: Key, heir: Key, unlock: Height = 2028-01-01) {
+  spend   { by owner }
+  recover { by heir; after unlock }
+}
+
+check "the owner spends today, and the heir's branch stays a hash" {
+  spend Recoverable()
+  amount 100000000000
+  as owner
+  expect spend
+}
+
+check "the heir has to wait" {
+  spend Recoverable()
+  amount 100000000000
+  as heir
+  at 2027-12-31
+  expect cannot
+}
+
+check "the heir after the unlock height" {
+  spend Recoverable()
+  amount 100000000000
+  as heir
+  at 2028-01-02
+  expect recover
+}
+
+// ---------------------------------------------------------------------------------------------
+// A grant that pays out no faster than a rate, with the payer able to revoke what has not been
+// drawn. The continuous form: `amount <= self.age * rate` is the circuit v0.1 `LE_AGE_RATE`
+// leaf, so the ceiling rises with the note's age in blocks rather than in whole periods.
+//
+// `age` is trustworthy for the same reason `after` is: the note's creation height is bound into
+// its tree leaf by the verifier.
+//
+// The remainder is `recoverable` and its amount is pinned to `self - out 0` for the reason
+// `sale.roost` gives at length: the *employee* builds every draw, and the *employer* is the one
+// who must be able to spend what comes back in order to revoke it. Unflagged, the first draw
+// silently deletes the employer's half of the arrangement — not by moving value, but by moving a
+// right — at no cost to the employee, and by accident in any wallet that randomises `data`.
+
+note Allowance(payer: Key, payee: Key, rate: Amount = 10) {
+  revoke { by payer }
+  draw {
+    by payee
+    inputs 1
+    out 0 { amount <= self.age * rate }
+    out 1 { to self; amount == self - out 0; recoverable }
+  }
+}
+
+check "a hundred blocks buys a thousand units" {
+  spend Allowance()
+  amount 100000
+  as payee
+  at created + 100 blocks
+  inputs 1
+  out 0: 1000
+  out 1: 99000 self
+  expect draw
+}
+
+check "one unit past the rate" {
+  spend Allowance()
+  amount 100000
+  as payee
+  at created + 100 blocks
+  inputs 1
+  out 0: 1001
+  out 1: 98999 self
+  expect cannot
+}
+
+check "the payer revokes what has not been drawn" {
+  spend Allowance()
+  amount 100000
+  as payer
+  expect revoke
+}

@@ -1,0 +1,80 @@
+// NightCash — the transfer policy. This is what a NightCash note actually carries.
+//
+// `pk(owner)`, and nothing else. `wallet issue` and `wallet pay` both build the output note
+// with `account.address().default_policy()` (`crates/nightjar-cli/src/main.rs:558`, `:610`),
+// and that function is one line: `Policy::Key(self.ak)`
+// (`crates/nightjar-zk/src/keys.rs:230`). There is no asset logic in it and there is no room
+// for any.
+//
+// That is not a simplification of this example, it is the shape of a Nightjar asset. What makes
+// NightCash NightCash lives in two places, neither of them the note's policy:
+//
+//   * `terms = Fq(visibility + 2*max_supply + 2^65*index)`, hashed into `asset_id`
+//     (`spec/note-format-v0.md` section 8). The supply cap is part of the asset's *identity*, so
+//     "capped at 100,000,000" is checked by every verifier and cannot be edited later — an
+//     issuer who wants another cap gets another asset.
+//   * the circuit's conservation rule, which is what stops a note of one asset turning into a
+//     note of another.
+//
+// An example that put an elaborate policy here to look impressive would be teaching the
+// opposite of what is true. The interesting policies in this repository are in `sale.roost`,
+// where they belong: on the note that *sells* the asset, not on the note that holds it.
+
+note NightCash(owner: Key) {
+  spend { by owner }
+}
+
+check "the owner spends" {
+  spend NightCash()
+  amount 100000000000
+  as owner
+  expect spend
+}
+
+// The whole of the guarantee, and worth writing down because it is the only one: nobody else.
+check "nobody else can" {
+  spend NightCash()
+  amount 100000000000
+  as nobody
+  expect cannot
+}
+
+// The one variant of the transfer policy the shipped CLI also builds. `wallet pay --expires h`
+// makes the recipient's note `pk(recipient) && before(h)`
+// (`crates/nightjar-cli/src/main.rs:610`), so the payment has to be consumed by a transition
+// applied at or before height `h`.
+//
+// `before` is the one condition the circuit does not check: the verifier enforces it against the
+// height the transition is applied at, so `h` travels in the clear. The report's `public` line
+// for `spend` says so. Sending money that publishes a deadline is a real cost and it is the
+// reason the plain form above is the default.
+note ExpiringPayment(owner: Key, deadline: Height = 2027-06-01) {
+  spend { by owner; before deadline }
+}
+
+check "the recipient spends before the deadline" {
+  spend ExpiringPayment()
+  amount 100000000000
+  as owner
+  at 2027-05-31
+  expect spend
+}
+
+// `before(t)` is `H <= t`, inclusive, so the deadline block itself still works.
+check "and in the deadline block itself" {
+  spend ExpiringPayment()
+  amount 100000000000
+  as owner
+  at 2027-06-01
+  expect spend
+}
+
+// After it the note is nobody's: there is no second clause, so an expired payment is not
+// returned to the sender, it is frozen. `wallet pay --expires` is a deadline, not an escrow.
+check "one block later it is frozen, for the owner too" {
+  spend ExpiringPayment()
+  amount 100000000000
+  as owner
+  at 2027-06-02
+  expect cannot
+}

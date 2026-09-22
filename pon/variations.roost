@@ -1,0 +1,126 @@
+// Phases of One Night — variations. **Nothing in this file is deployed and nothing in this file
+// is built by any command of the Nightjar CLI.**
+//
+// The two things people expect an NFT standard to provide and Nightjar does not: an enforced
+// royalty, and a transfer the issuer can gate. Both are writable as note policies, neither is
+// a property of the asset, and the difference matters — a policy travels with *this note*, and
+// the moment the note is spent under a clause that does not re-impose it, it is gone.
+//
+// To deploy either you would build the transition yourself. `roost check` proves they compile
+// and that their clauses behave; it proves nothing about a wallet's willingness to build one.
+
+// ---------------------------------------------------------------------------------------------
+// A royalty that binds a listing, not an asset.
+//
+// While the piece sits under this policy, a buyer must pay the seller **and** the creator in the
+// same transition. The purchase is 2 in / 3 out and needs no signature from the buyer: the piece
+// becomes theirs by conservation.
+//
+// Read the `cancel` clause before believing the royalty is enforced. Delisting takes the piece
+// out of this policy and into a plain `pk(owner)` note, after which the next sale pays nobody.
+// **The royalty binds a listing, not every future transfer**, and no note policy in this
+// protocol can do otherwise: a policy governs the note it is on, and the seller chooses the
+// policy of the note they create next. An NFT "with a 5% royalty" is a claim about the
+// marketplace, here as everywhere else.
+//
+// `seller` and `creator` must be two different addresses. Each `out` leaf picks its own output
+// and nothing relates one leaf's choice to another's, so if the seller *is* the creator the two
+// payouts are the same policy, holder, asset and data with two floors — and a single payment of
+// `price` clears both, silently deleting the royalty. `recoverable` does not save you: both
+// leaves belong to the same consumed note, so both demand the same randomness. A primary sale
+// wants one payout, not two.
+
+note Listing(seller: Address, creator: Address, currency: Asset, price: Amount = 1000, royalty: Amount = 50) {
+  cancel { by seller }
+  buy {
+    out any { to seller;  asset currency; amount >= price;   recoverable }
+    out any { to creator; asset currency; amount >= royalty; recoverable }
+  }
+}
+
+check "the buyer pays both" {
+  spend Listing()
+  amount 1
+  as nobody
+  inputs 2
+  out 0: 1
+  out 1: 1000 to seller asset currency
+  out 2: 50 to creator asset currency
+  expect buy
+}
+
+check "skipping the royalty" {
+  spend Listing()
+  amount 1
+  as nobody
+  inputs 2
+  out 0: 1
+  out 1: 1000 to seller asset currency
+  expect cannot
+}
+
+// This is the check that says what the royalty is worth: the seller can simply take the piece
+// out of the listing, and then owe nobody anything.
+check "the seller delists, and the royalty is gone with the listing" {
+  spend Listing()
+  amount 1
+  as seller
+  expect cancel
+}
+
+// ---------------------------------------------------------------------------------------------
+// A piece that can only change hands with the issuer's co-signature, and that the holder alone
+// can send back.
+//
+// The holder signs in both clauses, which a policy may not repeat — a key may appear once. The
+// compiler factors it above the choice for you; the report's `factored` line shows it and the
+// canonical policy reads `pk(holder) && (pk(issuer.key) || out(0)…)`.
+//
+// `return` hands the piece back to the issuer and the *holder* builds that transition, so the
+// payout is `recoverable`: unflagged, the holder picks the issuer's `rseed` and `data`,
+// transmits neither, and the returned piece is simply destroyed — at no cost to the holder, and
+// indistinguishable from an honest return. `amount == self` and `to issuer` pin the other four
+// commitment fields already, so the flag is the whole of the fix.
+//
+// What this does **not** do is make the collection permanently gated. It gates this note. The
+// issuer's co-signature is required for a transfer *out of this policy*, and the policy of the
+// note that transfer creates is chosen by whoever builds it — so the first co-signed resale can
+// land the piece under a plain `pk(owner)` and every sale after it is unconditioned. Keeping the
+// gate means re-imposing it on each output, which is a covenant on `out 0` and not a property
+// anybody can enforce from outside the transition.
+
+note Consigned(holder: Key, issuer: Address) {
+  resale { by holder, issuer.key }
+  return { by holder; inputs 1; out 0 { to issuer; amount == self; recoverable } }
+}
+
+check "the holder alone cannot resell" {
+  spend Consigned()
+  amount 1
+  as holder
+  expect cannot
+}
+
+check "holder and issuer resell together" {
+  spend Consigned()
+  amount 1
+  as holder, issuer
+  expect resale
+}
+
+check "the holder sends it back" {
+  spend Consigned()
+  amount 1
+  as holder
+  inputs 1
+  out 0: 1 to issuer
+  expect return
+}
+
+// The gate is not a claw-back: the issuer cannot take the piece, only refuse to let it move.
+check "the issuer cannot move the piece alone" {
+  spend Consigned()
+  amount 1
+  as issuer
+  expect cannot
+}

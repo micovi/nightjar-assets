@@ -1,0 +1,48 @@
+// Phases of One Night — the transfer policy of one piece.
+//
+// It is `pk(owner)`. Compile this file and `../nc/transfer.roost` and compare the reports: same
+// policy, same 34 bytes, same Poseidon377 root. **A unique piece of art and a unit of money
+// carry the identical policy**, and that is the most useful thing in this repository to have
+// understood.
+//
+// Everything that makes this an NFT rather than money is in `asset_id`, not here:
+//
+//     terms    = Fq(visibility + 2*max_supply + 2^65*index)
+//     asset_id = Poseidon_3(DS_ASSET, collection_id, label, terms)
+//
+// (`spec/note-format-v0.md` section 8.) `max_supply = 1` and `decimals = 0` make the asset
+// indivisible and unique; `index` places it in the collection; `collection_id` — derived from
+// the issuer's key, a collection label and the channel id — is what groups the hundred pieces.
+// Changing any of them yields a different `asset_id`. So "there is only one of these" is
+// **checked by every verifier**, not claimed in `c.json` and not enforced by a clause.
+//
+// Which is why there is no clause here that says "this cannot be split". It would be dead code:
+// the conservation rule in the circuit cannot produce two units of an asset whose cap is one,
+// whatever the policy says.
+
+note Piece(owner: Key) {
+  spend { by owner }
+}
+
+check "the holder gives the piece away" {
+  spend Piece()
+  amount 1
+  as owner
+  expect spend
+}
+
+check "nobody else can" {
+  spend Piece()
+  amount 1
+  as nobody
+  expect cannot
+}
+
+// Not a separate rule and not enforced here: the amount is 1 because the asset's cap is 1. This
+// check spends the whole note, which is the only thing a note of amount 1 can do.
+check "the whole piece, or nothing" {
+  spend Piece()
+  amount 1
+  as owner
+  expect spend
+}

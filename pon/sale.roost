@@ -1,0 +1,84 @@
+// Phases of One Night — the sale policy: how a piece reaches somebody who is not the issuer.
+//
+// The same `programs::reservation_policy` (`crates/nightjar-cli/src/programs.rs:223`) that sells
+// a lot of NightCash sells a piece of art, with `amount 1` instead of a lot. There is no
+// NFT-specific sale mechanism in Nightjar and this file is not hiding one.
+//
+//     pk(S) && after(h_exp) || (pk(B) && zec(H_order, price))
+//
+// `../nc/sale.roost` documents F5, F14 and F16 at length — why the buyer is named, why the
+// seller's cancel is time-locked, why `seller` and `till` must be a per-order identity and not
+// the maker's account. All of it applies here unchanged; this file records what is *different*
+// about selling a unique piece.
+//
+// **There is no partial-fill form of this, and that is not an omission.** `programs::offer_policy`
+// splits a lot: the taker takes some, the remainder stays on offer under the same policy. A lot
+// of one cannot be split, so a piece has exactly two states — reserved or not — and the whole
+// remainder machinery (`amount == self - out 0`, `recoverable`, N3) has nothing to do. Nothing
+// stops you posting a piece with `wallet offer`; the first fill takes all of it and the
+// remainder is a note of zero.
+//
+// **Minting is still not a policy.** An issuer mints a piece by proving knowledge of
+// `issuer_ak`, `collection_label`, `label` and `terms` inside the transition and signing under a
+// randomized `issuer_ak` (`spec/note-format-v0.md` section 8). A collection that lets the public
+// mint would have to sell *pre-minted* pieces exactly as below — the issuer mints first and then
+// puts each one up — because there is nowhere in a note policy to write "whoever pays may
+// create a new asset". `mint.sh` does it in that order for that reason.
+
+note PieceReservation(seller: Key, buyer: Key, till: Account, price: Zec = 2 zec, expires: Height = 2027-06-01) {
+  cancel { by seller; after expires }
+  buy    { by buyer; paid price to till }
+}
+
+check "the named buyer pays two ZEC and takes the piece" {
+  spend PieceReservation()
+  amount 1
+  as buyer
+  paid 2 zec to till
+  expect buy
+}
+
+check "one zatoshi short" {
+  spend PieceReservation()
+  amount 1
+  as buyer
+  paid 199999999 zat to till
+  expect cannot
+}
+
+// F5: the piece is reserved *for one buyer*. Anyone else's money buys nothing, which is what
+// stops two collectors paying for one piece in the same block and only one of them getting it.
+check "another collector, with the money, still cannot" {
+  spend PieceReservation()
+  amount 1
+  as nobody
+  paid 2 zec to till
+  expect cannot
+}
+
+// F5, the other half: the seller cannot read the payment in the mempool and cancel out from
+// under it.
+check "the seller cannot cancel while the reservation stands" {
+  spend PieceReservation()
+  amount 1
+  as seller
+  at 2027-05-31
+  expect cannot
+}
+
+check "the seller takes an unsold piece back after the expiry" {
+  spend PieceReservation()
+  amount 1
+  as seller
+  at 2027-06-02
+  expect cancel
+}
+
+// `after(h)` is inclusive, so the expiry block itself is the seller's.
+check "and in the expiry block itself" {
+  spend PieceReservation()
+  amount 1
+  as seller
+  at 2027-06-01
+  expect cancel
+}
