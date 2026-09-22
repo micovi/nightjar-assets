@@ -1,0 +1,20 @@
+# Roost has no entry in GitHub's linguist, so `.roost` files render as plain text — which is how
+# the most interesting files in this repository end up looking like the least interesting ones.
+#
+# Kotlin is the closest borrowed grammar, and the resemblance is not a coincidence of syntax alone:
+# a Roost declaration is a name, a typed parameter list and a braced body,
+#
+#   note Reservation(seller: Key, buyer: Key, expires: Height) { ... }
+#
+# which is exactly the shape Kotlin highlights, down to `name: Type` and `//` comments. What it
+# gets wrong is small and visible: Roost's clause names (`spend`, `recover`, `by`, `after`, `out`)
+# are not Kotlin keywords and stay unhighlighted, and `check` blocks read as ordinary calls. None
+# of that misleads — an unhighlighted word is not a wrongly-coloured one.
+#
+# This is a **display** choice and nothing more. `roost check` is what decides whether a file is
+# valid, and it has never heard of Kotlin.
+*.roost linguist-language=Kotlin
+
+# The artwork is data, not source. Without this the repository is 102 PNGs and GitHub's language
+# bar describes it by what it counts rather than by what it is for.
+pon/art/*.png linguist-generated=true
