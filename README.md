@@ -85,13 +85,22 @@ Three counts appear around this collection and they are easy to confuse, so:
 |---|---|---|
 | **100** | how many pieces the publisher **intends** | `size` in `pon/c.json` |
 | **100** | how many artworks and digests are **published** | `pon/0.png` … `pon/99.png`, `digests[0..99]` |
-| **10** | how many members are **minted** on the devnet channel today | the channel, indices 0–9 |
+| **grows** | how many members are **minted** so far | the channel — ask it, do not read it here |
 
 `size` is advisory. The channel decides how many members exist, and `spec/asset-collection-v0.md`
 §3.1 is explicit that a wallet **MUST NOT** treat a member whose index is ≥ `size` as invalid. So
-`size` is a statement of intent, not a count and not a bound — which is exactly why 100 intended,
-100 published and 10 minted can all be true at once, and why a wallet gets the member count from
-the channel rather than from this file.
+`size` is a statement of intent, not a count and not a bound — which is exactly why all three can
+be true at once, and why a wallet gets the member count from the channel rather than from this
+file.
+
+**The third number is deliberately not written down here, and that is the point.** A collection is
+launched, not completed: the publisher declares how many pieces there will be and puts the artwork
+up for all of them, and the pieces are minted over time — by the issuer, or by whoever buys or
+mints one next. A collection exists on the channel from its first member, because `collection_id`
+is derived from the issuer's key and the collection label rather than from any count. Writing
+today's minted total into this file would make it wrong on the next mint, and would quietly suggest
+the collection is finished when the opposite is true. Ask the channel: `GET /api/assets` on an
+indexer, or `nightjar assets --uivk <channel uivk>`.
 
 `size` stays at **100**, and the reason is `digests`. That array has no incremental form (§6, T3): a
 collection that grows must republish the whole document, which changes its bytes and therefore any
