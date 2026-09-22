@@ -164,11 +164,11 @@ that asset (§3.1). Acceptance is the trigger, and acceptance is a disclosure th
 
 ## What is deployed, and why no id is written down here
 
-Nothing in this file records an `asset_id`, a `collection_id`, a `channel_id` or a height. That is
-the honest form rather than an omission: a channel is born from a wallet's `uivk` and every id
-below it derives from that, so the same sequence run against your node produces ids that are not
-the ones anybody else's run produced. An id in a README is a claim about one deployment at one
-moment, and a reader of it has neither. Ask the channel you ran this against:
+Nothing in this file records an `asset_id`, a `collection_id`, a `channel_id` or a height. A
+channel is born from a wallet's `uivk` and every id below it derives from that, so the same
+sequence run against your node produces ids that are not the ones anybody else's run produced. An
+id in a README is a claim about one deployment at one moment, and a reader of it has neither. Ask
+the channel you ran this against:
 
 ```sh
 ./target/release/nightjar assets --uivk <channel uivk> --keys .devnet/keys

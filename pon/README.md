@@ -105,7 +105,7 @@ tells the host that someone is looking at that asset. A hundred separate documen
 to a hundred requests whose *pattern* discloses which pieces a wallet cares about — the collection
 equivalent of publishing a balance.
 
-### §2.1 corrects §2, and the correction is the part to read
+### §2.1 corrects §2: the document is shared, the images are not
 
 Revision 1 of that spec claimed the shared document discloses "nothing about which members", and
 revision 2 added §2.1 to say that was false. **The document is shared; the images are not.**

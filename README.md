@@ -10,8 +10,7 @@ and a script that sends the messages.
 | [`nc/`](nc/) | **NightCash** | a fungible asset: 8 decimals, capped, `spec/asset-metadata-v0.md` |
 | [`pon/`](pon/) | **Phases of One Night** | a hundred unique pieces sharing one document, `spec/asset-collection-v0.md` |
 
-They are deliberately the same shape, because the point of putting them side by side is that a
-unit of money and a unique piece of art are, in this protocol, almost the same object. Read
+A unit of money and a unique piece of art are, in this protocol, almost the same object. Read
 `nc/transfer.roost` and `pon/transfer.roost` together: identical policy, identical 34 bytes,
 identical Poseidon377 root. Everything that distinguishes them is in `asset_id`.
 
@@ -54,34 +53,25 @@ them. From the Nightjar repository root:
 cargo run -p nightjar-lang --bin roost -- check ../nightjar-assets/nc/transfer.roost
 ```
 
-## The rule that should govern your layout, and did not govern this one
+## The layout, and why you only get to choose it once
 
-**A path in a published document is a signed commitment, and moving it breaks the asset
-permanently.**
+**A path in a published document is a signed commitment.** An `ASSET` message (kind `0x04`)
+carries the `uri`, and step 4 of `spec/transition-v0.md` §9 is one sentence: *if `Assets` already
+holds `asset_id`, ignore.* First valid message wins, the map is never pruned, and there is no
+amendment message — so an asset is named exactly once, and the `uri` that naming carried is its
+`uri` for the life of the channel. Move the file it points at and every wallet fetches a 404, for
+ever.
 
-An `ASSET` message (kind `0x04`) carries the `uri`, and step 4 of `spec/transition-v0.md` §9 is
-one sentence: *if `Assets` already holds `asset_id`, ignore.* First valid message wins, that map
-is never pruned, and there is no amendment message. So an asset is named **exactly once**, by
-whoever made the public issuance, and the `uri` that naming carried is the `uri` for the life of
-the channel. Move the file it points at and every wallet, for ever, fetches a 404 — with no
-recovery, because re-naming is exactly what step 4 refuses.
+Pinning makes that stricter rather than looser: `spec/asset-metadata-v0.md` §2.1 puts a `#b2=`
+digest of the document in the signed `uri`, so the signature fixes the *bytes* and not just the
+address. `tools/lib.sh` therefore computes the pin from the **published** document immediately
+before the naming message is signed, and fails rather than warns when it cannot — naming against
+a document that is not up yet means being unpinned for good, or pinned to bytes nobody will be
+served. `--allow-unpinned` takes that decision on purpose.
 
-Pinning makes it stricter rather than looser. `spec/asset-metadata-v0.md` §2.1 puts a `#b2=`
-digest of the document in the signed `uri`, so the signature fixes the *bytes*, not just the
-address. That is why `tools/lib.sh` computes the pin by fetching the **published** document
-immediately before the naming message is signed, and fails rather than warning if it cannot:
-naming against a document that is not up yet means being unpinned for good, or pinned to bytes
-nobody will ever be served. `--allow-unpinned` exists, prints a warning that says *never*, and is
-the honest way to take that decision on purpose.
-
-**The rule has exactly one exemption, and it is worth being exact about it.** A layout may
-still be moved while nothing has been named against it — or while the only assets that have are
-on a network about to be thrown away, since rebuilding one changes every `asset_id` in any case.
-**That is the only moment the rule is free: before an asset has any users.** After it, the
-layout is not yours to change, and no amount of care about where a file *ought* to live buys
-back a `uri` that has been signed.
-
-## What the layout is, and why the directories have short names
+You may still move a layout while nothing has been named against it, or while the only assets
+that have are on a network you are about to throw away, since rebuilding one changes every
+`asset_id` in any case. That window is the whole exemption.
 
 ```
 README.md              this
@@ -122,47 +112,36 @@ https://raw.githubusercontent.com/micovi/nightjar-assets/main/     62
 so nothing larger can be expressed at all. A fork whose owner or repository name is much longer
 than `micovi/nightjar-assets` has less room than the table above.
 
-**A document too deep to carry its pin is a document that cannot be pinned**, and that is the
-part worth carrying away. It does not become silently unpinned — the pin is what makes a signed
-`uri` fix the *bytes* rather than the address, and without it whoever controls the host can swap
-the document under an asset whose issuer signed something else. `tools/lib.sh` refuses to mint
-when the arithmetic does not clear, which is a better place to find out than after the naming
-message is signed, because an `ASSET` message is first-valid-wins: an asset named with a bare
-`uri` can never be named again.
+**A document too deep to carry its pin is a document that cannot be pinned.** It does not become
+silently unpinned: without the pin, whoever controls the host can swap the document under an
+asset whose issuer signed something else. `tools/lib.sh` refuses to mint when the arithmetic does
+not clear — a better place to find out than after the naming message is signed, which is the last
+chance there is.
 
 Everything that is *not* in a signed `uri` — the artwork under `pon/art/`, the READMEs, the Roost
 sources, the scripts — is named for what it is and carries no budget at all.
 
-## Nothing here is authoritative
+## What is signed, and what is only decoration
 
 An asset's identity is its `asset_id` on the channel, and its `name`, `symbol` and `decimals` are
-signed on-chain in the `ASSET` message. A document in this repository is decoration a wallet may
+signed there too, in the `ASSET` message. A document in this repository is decoration a wallet may
 show **after** the user has explicitly accepted that `asset_id` — never before, and never because
 a wallet happens to hold the asset (`spec/asset-metadata-v0.md` §3.1, §5).
 
-The same argument reaches collections, and it has to be made again rather than assumed, because a
-collection is the level at which a name looks most like a guarantee. **`collection_id` is a
-collection's identity**, exactly as `asset_id` is an asset's. It is derived from the issuer's key,
-a collection label and the channel id, and hashed into every member's `asset_id`. The human name
-in `pon/c.json` is not `collection_id` and is bound to nothing: two collections may share a name,
-only one can share a `collection_id`. A wallet must show `collection_id` wherever it shows the
-name.
+The same holds one level up, where a name looks most like a guarantee. **`collection_id` is a
+collection's identity**, derived from the issuer's key, a collection label and the channel id, and
+hashed into every member's `asset_id`. The human name in `pon/c.json` is bound to nothing: two
+collections may share a name, only one can share a `collection_id`. A wallet must show
+`collection_id` wherever it shows the name.
 
-None of this is a claim that the files here are trustworthy. It is the reason it does not matter
-very much whether they are: a document can say anything, and the things that decide anything are
-checked against the channel.
+So none of these files has to be trustworthy. Everything that decides anything is checked against
+the channel.
 
-**Ids are perishable, and this is not a caveat but the normal case.** A channel is born from a
-wallet's `uivk`, so every rebuild of the network produces a new `channel_id`; `collection_id` is
-derived from the issuer's key, a label and that `channel_id`, and `asset_id` from
-`collection_id`, the label, the index and the supply cap. So every rebuild changes every id.
-
-That is why no `channel_id`, no `collection_id` and no `asset_id` is written down anywhere in
-this repository, and the absence is the honest form rather than an omission. An id in a file is a
-claim about one deployment at one moment; a reader running these examples has a different
-deployment and a later moment, and every id they produce will differ from every id anyone else
-produces. The commands below are the answer to *what are the ids*, and they are the only answer
-that is true on the day it is read.
+**No `channel_id`, `collection_id` or `asset_id` appears anywhere in this repository**, because
+every one of them is perishable. A channel is born from a wallet's `uivk`, so each rebuild of the
+network gives a new `channel_id`, a new `collection_id` derived under it, and a new `asset_id`
+under that. Your deployment's ids will differ from everyone else's. Ask the channel instead — the
+commands below are the only answer that is true on the day it is read.
 
 ## Checking the repository against the channel
 
