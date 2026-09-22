@@ -39,3 +39,6 @@ pon/d.bin binary
 # decided. What was decided is the `b2` and the `bytes` in `pon/c.json`, two lines away, and
 # they are what a reviewer should be looking at.
 pon/i.json linguist-generated=true
+x/art/*.png linguist-generated=true
+x/d.bin binary
+x/i.json linguist-generated=true

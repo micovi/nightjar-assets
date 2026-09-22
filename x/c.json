@@ -1,0 +1,21 @@
+{
+  "schema": "nightjar-collection-metadata/1",
+  "revision": 0,
+  "name": "Ten Thousand Nights",
+  "description": "A ten-thousand-piece collection on a Nightjar channel over a local Zcash test network. It exists to show that the document describing it does not grow with it: every one of the ten thousand members signs this same uri.",
+  "size": 10000,
+  "item": {
+    "name": "Ten Thousand Nights #{index}",
+    "image": "https://raw.githubusercontent.com/micovi/nightjar-assets/bench-10k/x/art/{index}.png"
+  },
+  "digest_table": {
+    "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/bench-10k/x/d.bin",
+    "b2": "eAdk_Js_eKb1vpIh-uJp1sZTHBkNaDI2YbQFSZSIfbA",
+    "count": 10000
+  },
+  "items_document": {
+    "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/bench-10k/x/i.json",
+    "b2": "YtyHqmB9OJhrJ1umh1IQy4twNj62wJYhd8BNyAHob4E",
+    "bytes": 1907222
+  }
+}
