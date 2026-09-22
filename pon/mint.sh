@@ -22,6 +22,14 @@
 # to lie about which piece is which. Ten separate pins would also be ten chances to catch the
 # host mid-edit and sign ten different digests for one file.
 #
+# **Earlier still, when there is one, comes the digest table.** A collection past 302 members
+# carries `digest_table` in place of `digests` (spec/asset-collection-v0.md section 3.3.1), and
+# the document then holds the table's digest — so the table must be published and hashed before
+# the document is pinned, and no later step reports getting that backwards. tools/lib.sh's
+# check_published_table has the order and the argument. This collection is a hundred members and
+# carries `digests` inline, so the step below it is a no-op here and is exercised by
+# `tools/doc.py selftest` instead.
+#
 # **What this does not remove is the hundred messages.** An ASSET message names exactly one
 # asset_id, so a hundred-piece collection is a hundred issuances and a hundred namings, each with
 # its own proof. spec/asset-collection-v0.md section 6 T1 says so plainly and names the
@@ -54,6 +62,27 @@ init_wallets
 say "funding the issuer and the buyer from the treasury"
 fund "$ISSUER" 8 480000
 fund "$BUYER"  3 80000000
+
+# **If the document pins a digest table, the table is settled first.** Not as a nicety of
+# ordering but because the document *contains* the table's digest (`spec/asset-collection-v0.md`
+# section 3.3.1), so a document pinned before its table is up carries a b2 for bytes that do not
+# exist yet, or for the previous table. Nothing catches that afterwards: the pin below is
+# computed from the published document and will match it, the naming messages are accepted, and
+# the wallet that eventually fetches the table is required to treat the whole collection as
+# unpinned. See check_published_table in tools/lib.sh for the full order and what each step
+# commits to. Reading the table out of c.json rather than being told about it is deliberate —
+# the script cannot then disagree with the document about which shape the collection is in.
+read -r TABLE_URI TABLE_B2 TABLE_COUNT <<<"$(python3 -c 'import json; t = json.load(open("pon/c.json")).get("digest_table") or {}; print(t.get("uri", ""), t.get("b2", ""), t.get("count", ""))')"
+
+if [ -n "$TABLE_URI" ]; then
+  say "the digest table — settled before the document that commits to its bytes"
+  check_published_table "$TABLE_URI" "$TABLE_B2" "$TABLE_COUNT"
+fi
+# No table and nothing to print: this collection is a hundred members, and a hundred `digests`
+# inline is a long way inside the 302 that section 3.3's 16 KiB limit allows. The table buys a
+# constant-size document at the price of a second file to keep in step, and a collection that
+# does not need the first should not pay the second. `tools/doc.py digests --table` converts,
+# and `tools/doc.py selftest` is what keeps the path above honest in the meantime.
 
 # One pin for the whole collection, computed before any piece is named.
 say "the shared document — one uri for every member"

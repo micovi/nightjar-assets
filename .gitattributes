@@ -18,3 +18,10 @@
 # The artwork is data, not source. Without this the repository is 102 PNGs and GitHub's language
 # bar describes it by what it counts rather than by what it is for.
 pon/art/*.png linguist-generated=true
+
+# A collection too large to carry its digests inline publishes them as `pon/d.bin`, a flat run of
+# 32-byte BLAKE2b digests (`spec/asset-collection-v0.md` §3.3.1). This repository's collection has
+# a hundred members and correctly keeps them inline, so no such file is committed here — the rule
+# is written down anyway, because a fork that runs `tools/doc.py digests --table` commits a binary
+# that GitHub would otherwise count as source and try to diff.
+pon/d.bin binary

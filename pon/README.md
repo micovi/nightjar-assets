@@ -164,9 +164,23 @@ and would quietly suggest the collection is finished when the opposite is true.
 collection that grows must republish the whole document, which changes its bytes and therefore any
 `#b2=` that already-signed `ASSET` messages point at — so a growing collection either goes
 unpinned or re-signs every member, and re-signing is what §9 step 4 of `transition-v0.md` refuses.
-The spec's only answer is to size `digests` for the final count at first publication, which is
-what this document does. Cutting `size` to 10 would either leave 90 digests for members the
-document says do not exist, or drop them and forfeit the one mitigation T3 offers.
+Sizing `digests` for the final count at first publication is the answer, and it is what this
+document does. Cutting `size` to 10 would either leave 90 digests for members the document says do
+not exist, or drop them and forfeit the one mitigation T3 offers.
+
+Revision 4 of the spec half-closes this, and it is worth knowing which half. `digest_table`
+(§3.3.1) still has no incremental form — a table that grows is a table whose `b2` changes, which
+breaks every member already signed against the document pinning it. What it adds is a way to
+**append without touching what is already pinned**: members minted later sign a *new* document
+`uri` carrying a longer table, the earlier members keep theirs, and a wallet unions the tables of
+every distinct `uri` the collection's members name. It finds that set on the **chain**, not in any
+document, because a document cannot reference forward — the first one is signed and frozen before
+the second exists. Amending a digest that is already pinned is still impossible.
+
+This collection does not use a table, and should not: at 100 members `digests` costs 51 bytes each
+against a 16 KiB limit, so the inline form fits with room to spare and costs one fetch instead of
+two. The table is for the collections that cannot fit — past 302 members — and `tools/doc.py
+digests --table` is how you build one.
 
 ## What gets sent
 

@@ -129,10 +129,29 @@ uri_budget() {  # url
     "${#1}" "$PIN_COST" "$(( ${#1} + PIN_COST ))" "$URI_MAX"
 }
 
+# The budget half of `pin`, on its own, because one uri in these documents is pinned without
+# being signed. `digest_table.uri` (`spec/asset-collection-v0.md` section 3.3.1) is named by the
+# collection document and hashed by the `b2` beside it, and no `ASSET` message ever carries it —
+# so nothing in the wire format forces it under 255 bytes. It is held to the same ceiling anyway.
+# The table and the document are published side by side and a publisher who discovers the limit
+# on one of them wants to discover it on both at the same moment, which is while the layout can
+# still be moved (README.md: "why you only get to choose it once").
+uri_fits() {  # url
+  local budget=$(( ${#1} + PIN_COST ))
+  [ "$budget" -le "$URI_MAX" ] || fail "the pinned uri is $budget bytes, over the $URI_MAX-byte limit of an ASSET message ($1). Shorten the path or the base URL; see README.md."
+}
+
+# BLAKE2b-256 of a **local** file, base64url unpadded. Every digest these documents carry is in
+# this encoding — `logo.b2`, `digests[i]` and `digest_table.b2` — and tools/doc.py computes them
+# the same way, which is why a digest printed by one can be compared against a digest printed by
+# the other without anybody converting anything.
+b2_file() {  # path -> digest
+  python3 -c 'import sys,hashlib,base64; d=hashlib.blake2b(open(sys.argv[1],"rb").read(),digest_size=32).digest(); print(base64.urlsafe_b64encode(d).decode().rstrip("="))' "$1"
+}
+
 pin() {   # url -> url#b2=<digest>
-  local url="$1" b2 budget
-  budget=$(( ${#url} + PIN_COST ))
-  [ "$budget" -le "$URI_MAX" ] || fail "the pinned uri is $budget bytes, over the $URI_MAX-byte limit of an ASSET message ($url). Shorten the path or the base URL; see README.md."
+  local url="$1" b2
+  uri_fits "$url"
 
   if [ "$ALLOW_UNPINNED" = 1 ]; then
     echo "WARNING: naming with a bare uri. ASSET is first-valid-wins, so this asset can NEVER be re-named with a pinned one." >&2
@@ -148,6 +167,60 @@ pin() {   # url -> url#b2=<digest>
     | python3 -c "import sys,hashlib,base64; d=hashlib.blake2b(sys.stdin.buffer.read(),digest_size=32).digest(); print(base64.urlsafe_b64encode(d).decode().rstrip('='))" 2>/dev/null) || b2=""
   [ -n "$b2" ] || fail "could not fetch $url to pin it. Publish the documents first: the pin is computed from the published bytes, and the naming message that signs it can only be sent once. Or pass --allow-unpinned and read what that costs."
   printf '%s#b2=%s' "$url" "$b2"
+}
+
+# **The digest table is published before the document, and this is what checks that it was.**
+#
+# `spec/asset-collection-v0.md` section 3.3.1: a collection too large to carry `digests` inline —
+# 51 bytes a member reaches the 16 KiB document limit at 302 — may instead carry
+#
+#     "digest_table": { "uri": "…/pon/d.bin", "b2": "…", "count": 10000 }
+#
+# a file of exactly `32 × count` raw bytes, with no header and no magic number, whose digest
+# lives **inside the document**. That last clause fixes the order of everything a mint script
+# does, because a document that contains the table's digest cannot be written until the table is
+# final:
+#
+#   1. publish the table           its bytes are what the document will commit to
+#   2. b2 into the document        `tools/doc.py digests --table` writes it
+#   3. publish the document        now, and not before, the document is final
+#   4. pin the document            the `#b2=` covers the b2 from step 2
+#   5. name every member with it   one signed uri for the whole collection, section 2
+#
+# **Do 3 before 1 and nothing anywhere reports it.** The pin is honest — it matches the document
+# a wallet fetches — the naming message is accepted, and `ASSET` is first-valid-wins
+# (`spec/transition-v0.md` section 9 step 4), so there is no second one. The wallet then fetches
+# the table, finds a `b2` that does not match, and does what section 3.3.1 requires: treats **the
+# whole collection** as unpinned rather than some members. Every image, silently, for good. A
+# `digests` array cannot fail this way because it has no second file to be out of step with, so
+# this is a failure mode the table introduces and the only thing that costs.
+#
+# Which is why this fails rather than warning, exactly as `pin` does and for the same reason:
+# the last moment the mistake is cheap is before the first naming message is signed.
+check_published_table() {  # uri b2 count
+  local uri="$1" want="$2" count="$3" tmp n got
+  uri_fits "$uri"
+  uri_budget "$uri"
+
+  if [ "$DRY_RUN" = 1 ]; then
+    printf '   (fetch %s and check it is exactly 32 x %s = %s bytes hashing to %s)\n' \
+      "$uri" "$count" "$(( count * 32 ))" "$want"
+    return 0
+  fi
+
+  tmp=$(mktemp "${TMPDIR:-/tmp}/nj-digest-table.XXXXXX")
+  curl -sfL --max-time 20 -o "$tmp" "$uri" || { rm -f "$tmp"; fail "could not fetch the digest table at $uri. Publish the TABLE first and the document second: the document carries the table's b2, so a document published against a table that is not up yet pins bytes nobody will be served."; }
+  n=$(wc -c <"$tmp" | tr -d '[:space:]')
+  got=$(b2_file "$tmp")
+  rm -f "$tmp"
+
+  # Length before digest, in that order, because they fail differently. A table of the wrong
+  # length has no well-defined entry at offset 32i at all, so it is not a table with some bad
+  # digests; it is a file. Section 3.3.1 has a wallet reject it on the length alone.
+  [ "$n" = "$(( count * 32 ))" ] || fail "the table published at $uri is $n bytes, and section 3.3.1 requires exactly 32 x count = 32 x $count = $(( count * 32 )). A wallet rejects it on the length before it reads a digest out of it, and treats every member as unpinned."
+  [ "$got" = "$want" ] || fail "the table published at $uri hashes to $got and the document pins $want. The table that is up is not the one the document was written against — publish the table, then re-run tools/doc.py digests --table, then publish the document, then run this."
+
+  printf '   table %s bytes = 32 x %s, b2 %s — the bytes the document pins\n' "$n" "$count" "$got"
 }
 
 # ---------------------------------------------------------------------------------------------

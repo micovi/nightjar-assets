@@ -94,7 +94,7 @@ pon/                   worked example 2 — a collection of unique pieces
   mint.sh              two messages per member, one document for all of them
 tools/
   lib.sh               node plumbing shared by both mint scripts
-  doc.py               verify / retarget / regenerate digests
+  doc.py               verify / retarget / regenerate digests / selftest the table form
 ```
 
 A signed `uri` has a byte budget, and it is worth knowing how to spend it before you choose a
