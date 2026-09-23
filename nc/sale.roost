@@ -9,8 +9,8 @@
 // what the two notes below are.
 //
 // Both are the policies the shipped CLI builds, not designs invented for this repository:
-// `programs::reservation_policy` (`crates/nightjar-cli/src/programs.rs:223`) and
-// `programs::offer_policy` (`:282`). `scripts/devnet-programs.sh` in the Nightjar repository is
+// `programs::reservation_policy` (`crates/nyctis-cli/src/programs.rs:223`) and
+// `programs::offer_policy` (`:282`). `scripts/devnet-programs.sh` in the Nyctis repository is
 // the end-to-end that exercises both against a running node.
 
 // ---------------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@
 // Both halves were missing from the first shipped `sell`, and each absence was a way to lose
 // money (F5).
 //
-//   * `pk(buyer)` **names the buyer**. ZEC never enters Nightjar and this protocol cannot refuse
+//   * `pk(buyer)` **names the buyer**. ZEC never enters Nyctis and this protocol cannot refuse
 //     a Zcash payment. On an openly fillable order two buyers filling in the same block both pay
 //     while only the lower `(height, tx_index)` is applied — the loser forfeits the whole price,
 //     not a fee. Naming the buyer removes the race, because only the buyer can consume the note.
@@ -97,7 +97,7 @@ check "the seller reclaims an unsold lot after the expiry" {
 // split, so `pon/sale.roost` has no counterpart to this note.
 //
 // Unlike the reservation it needs no named taker and no timelock on the maker's branch: a
-// Nightjar transition is atomic, so a filler whose fill is ignored has spent nothing. Nothing
+// Nyctis transition is atomic, so a filler whose fill is ignored has spent nothing. Nothing
 // here can be raced away.
 //
 // Two pinned fields are the whole reason this is safe, and each was a bug first.

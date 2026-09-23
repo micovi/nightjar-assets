@@ -1,10 +1,10 @@
 {
-  "schema": "nightjar-collection-metadata/1",
+  "schema": "nyctis-collection-metadata/1",
   "revision": 4,
   "name": "Phases of One Night",
-  "description": "One night, sampled a hundred times. The frame never changes; the light does. A demonstration collection on a Nightjar channel over a local Zcash test network — each piece is its own asset capped at one, so its uniqueness is checked by every verifier rather than claimed in this file.",
+  "description": "One night, sampled a hundred times. The frame never changes; the light does. A demonstration collection on a Nyctis channel over a local Zcash test network — each piece is its own asset capped at one, so its uniqueness is checked by every verifier rather than claimed in this file.",
   "logo": {
-    "uri": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/logo.png",
+    "uri": "https://raw.githubusercontent.com/micovi/nyctis-assets/main/pon/logo.png",
     "b2": "m_avXJmGbldB-soUSYxLbAYIzS3FVosGjQGakfwD1RE",
     "mime": "image/png",
     "width": 512,
@@ -13,7 +13,7 @@
   "max_supply": 100,
   "item": {
     "name": "Phases of One Night #{index}",
-    "image": "https://raw.githubusercontent.com/micovi/nightjar-assets/main/pon/art/{index}.png"
+    "image": "https://raw.githubusercontent.com/micovi/nyctis-assets/main/pon/art/{index}.png"
   },
   "digests": [
     "WFrVrU8jIAuHGa-gyx1ahzYovqhh1hFIAoJN-tX04ro",
@@ -121,7 +121,7 @@
   "links": [
     {
       "rel": "github",
-      "uri": "https://github.com/micovi/nightjar-assets"
+      "uri": "https://github.com/micovi/nyctis-assets"
     }
   ]
 }

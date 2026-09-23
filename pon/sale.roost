@@ -1,8 +1,8 @@
 // Phases of One Night — the sale policy: how a piece reaches somebody who is not the issuer.
 //
-// The same `programs::reservation_policy` (`crates/nightjar-cli/src/programs.rs:223`) that sells
+// The same `programs::reservation_policy` (`crates/nyctis-cli/src/programs.rs:223`) that sells
 // a lot of NightCash sells a piece of art, with `amount 1` instead of a lot. There is no
-// NFT-specific sale mechanism in Nightjar and this file is not hiding one.
+// NFT-specific sale mechanism in Nyctis and this file is not hiding one.
 //
 //     pk(S) && after(h_exp) || (pk(B) && zec(H_order, price))
 //

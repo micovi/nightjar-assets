@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # NightCash — the messages that have to be sent, in the order they have to be sent in.
 #
-#   nc/mint.sh --dry-run --base-url https://raw.githubusercontent.com/you/nightjar-assets/main/
-#   nc/mint.sh           --base-url https://raw.githubusercontent.com/you/nightjar-assets/main/
+#   nc/mint.sh --dry-run --base-url https://raw.githubusercontent.com/you/nyctis-assets/main/
+#   nc/mint.sh           --base-url https://raw.githubusercontent.com/you/nyctis-assets/main/
 #
 # Run it with `--dry-run` first. It needs no node, sends nothing, and prints the exact
 # sequence; that output is what the README's command blocks are.
@@ -85,7 +85,7 @@ if [ "$NO_SALE" = 0 ]; then
 fi
 
 say "done — what the channel says about it now"
-echo "   $NJ_BIN assets --uivk <channel uivk> --keys $KEYS"
+echo "   $NY_BIN assets --uivk <channel uivk> --keys $KEYS"
 echo "   curl -s http://127.0.0.1:8787/api/assets | jq '.items[] | select(.symbol==\"NC\")'"
 echo
 echo "   asset_id $ASSET"

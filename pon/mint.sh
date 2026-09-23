@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Phases of One Night — the messages that have to be sent, in the order they have to be sent in.
 #
-#   pon/mint.sh --dry-run --base-url https://raw.githubusercontent.com/you/nightjar-assets/main/
-#   pon/mint.sh --count 10 --base-url https://raw.githubusercontent.com/you/nightjar-assets/main/
+#   pon/mint.sh --dry-run --base-url https://raw.githubusercontent.com/you/nyctis-assets/main/
+#   pon/mint.sh --count 10 --base-url https://raw.githubusercontent.com/you/nyctis-assets/main/
 #   pon/mint.sh --from 10 --count 90 --no-sale --base-url ...      # resume, mint only
 #
 # Run it with --dry-run first. It needs no node and sends nothing.
 #
 # **Two messages per member, and one document for all of them.** That is the whole shape of a
-# Nightjar collection:
+# Nyctis collection:
 #
 #   per piece   TRANSITION  issue   --collection <label> --index <i> --max-supply 1
 #   per piece   ASSET       name    "Phases of One Night #<i>", the SAME uri every time
@@ -138,7 +138,7 @@ elif [ "$NO_SALE" = 0 ]; then
 fi
 
 say "done — what the channel says about the collection now"
-echo "   $NJ_BIN assets --uivk <channel uivk> --keys $KEYS"
+echo "   $NY_BIN assets --uivk <channel uivk> --keys $KEYS"
 echo "   curl -s http://127.0.0.1:8787/api/assets | jq '.items[] | select(.symbol==\"PON\")'"
 echo
 echo '   The member count is a property of the channel, not of pon/c.json. "size" there is the'

@@ -7,8 +7,8 @@
 # what deploying an asset costs in messages, read nc/mint.sh and pon/mint.sh; this file is what
 # makes them run.
 #
-# Nothing here is Nightjar-specific except the CLI invocations, and every one of those is taken
-# from a script in the Nightjar repository that runs against a live node:
+# Nothing here is Nyctis-specific except the CLI invocations, and every one of those is taken
+# from a script in the Nyctis repository that runs against a live node:
 # `scripts/devnet-testassets.sh` (issue, name, pay) and `scripts/devnet-programs.sh`
 # (sell, publish, orders, buy).
 
@@ -20,8 +20,8 @@ BASE_URL=""
 RECIPIENT=""
 DRY_RUN=0
 ALLOW_UNPINNED=0
-DEVNET="${NIGHTJAR_DEVNET_DIR:-.devnet}"
-NJ_BIN="${NIGHTJAR_BIN:-./target/release/nightjar}"
+DEVNET="${NYCTIS_DEVNET_DIR:-.devnet}"
+NY_BIN="${NYCTIS_BIN:-./target/release/nyctis}"
 COUNT=10
 FROM=0
 NO_SALE=0
@@ -36,15 +36,15 @@ FINALITY="${FINALITY:-12}"
 usage_common() {
   cat <<'USAGE'
   --base-url URL     where the documents of THIS repository are published, ending in `/`
-                     e.g. https://raw.githubusercontent.com/you/nightjar-assets/main/
+                     e.g. https://raw.githubusercontent.com/you/nyctis-assets/main/
                      The document must already be reachable there: the pin is computed from
                      the published bytes, before the naming message is signed.
-  --recipient NJ     an `nj…` address to pay to. Default: the buyer wallet this script creates.
+  --recipient NJ     an `ny…` address to pay to. Default: the buyer wallet this script creates.
   --dry-run          print the exact sequence of messages and send nothing. Needs no node.
   --allow-unpinned   name the asset with a bare `uri`, with no `#b2=`. PERMANENT: see README.md.
   --devnet DIR       where the wallets and proving keys live.
-                     default .devnet (or $NIGHTJAR_DEVNET_DIR)
-  --bin PATH         default ./target/release/nightjar (or $NIGHTJAR_BIN)
+                     default .devnet (or $NYCTIS_DEVNET_DIR)
+  --bin PATH         default ./target/release/nyctis (or $NYCTIS_BIN)
   --no-sale          stop after issue/name/pay; do not post a sale or buy it
 USAGE
 }
@@ -57,7 +57,7 @@ parse_args() {
       --dry-run)        DRY_RUN=1; shift ;;
       --allow-unpinned) ALLOW_UNPINNED=1; shift ;;
       --devnet)         DEVNET="$2"; shift 2 ;;
-      --bin)            NJ_BIN="$2"; shift 2 ;;
+      --bin)            NY_BIN="$2"; shift 2 ;;
       --count)          COUNT="$2"; shift 2 ;;
       --from)           FROM="$2"; shift 2 ;;
       --no-sale)        NO_SALE=1; shift ;;
@@ -277,13 +277,13 @@ check_published_items() {  # uri b2 bytes
 
 preflight() {
   [ "$DRY_RUN" = 1 ] && return 0
-  [ -x "$NJ_BIN" ]        || fail "no $NJ_BIN — in the Nightjar repository: cargo build --release -p nightjar-cli"
-  [ -d "$KEYS" ]          || fail "no $KEYS — run: $NJ_BIN zk-setup --keys $KEYS"
-  [ -d "$DEVNET/channel" ]|| fail "no $DEVNET/channel — start the local network from infra/README.md in the Nightjar repository"
+  [ -x "$NY_BIN" ]        || fail "no $NY_BIN — in the Nyctis repository: cargo build --release -p nyctis-cli"
+  [ -d "$KEYS" ]          || fail "no $KEYS — run: $NY_BIN zk-setup --keys $KEYS"
+  [ -d "$DEVNET/channel" ]|| fail "no $DEVNET/channel — start the local network from infra/README.md in the Nyctis repository"
 }
 
-nj()   { "$NJ_BIN" "$@"; }
-mine() { [ "$DRY_RUN" = 1 ] && { printf '   (mine %s blocks)\n' "$1"; return 0; }; nj mine "$1" >/dev/null || fail "mine $1"; sleep 2; }
+ny()   { "$NY_BIN" "$@"; }
+mine() { [ "$DRY_RUN" = 1 ] && { printf '   (mine %s blocks)\n' "$1"; return 0; }; ny mine "$1" >/dev/null || fail "mine $1"; sleep 2; }
 bury() { mine "$FINALITY"; }
 
 # One note per message the run will send. A spend's change is unconfirmed until the next block
@@ -294,10 +294,10 @@ fund() {  # dir notes zatoshi-per-note
   local dir="$1" n="$2" value="$3" ua body
   [ "$DRY_RUN" = 1 ] && { printf '   (fund %s with %s notes of %s zatoshi from the treasury)\n' "$dir" "$n" "$value"; return 0; }
   [ "$n" -ge 2 ] || n=2; [ "$n" -le 8 ] || n=8
-  ua=$(nj wallet --dir "$dir" address | tail -1)
+  ua=$(ny wallet --dir "$dir" address | tail -1)
   body=$(printf "%0*d" $(( ((n - 1) * 466 + 1) * 2 )) 0)
-  nj wallet --dir "$TREASURY" send --to "$ua" --uivk "$TREASURY_UIVK" --body-hex "$body" --value "$value" >/dev/null \
-    || fail "the treasury $TREASURY could not fund $dir — point NIGHTJAR_DEVNET_TREASURY at a funded wallet"
+  ny wallet --dir "$TREASURY" send --to "$ua" --uivk "$TREASURY_UIVK" --body-hex "$body" --value "$value" >/dev/null \
+    || fail "the treasury $TREASURY could not fund $dir — point NYCTIS_DEVNET_TREASURY at a funded wallet"
   mine 2
 }
 
@@ -314,11 +314,11 @@ fund() {  # dir notes zatoshi-per-note
 # stdout is captured by its caller: an echo on stdout would be read back as an asset id.
 issue_public() {  # label amount max_supply collection index -> "asset_id msg_id"
   local out mid aid
-  printf '   $ %s\n' "$(q "$NJ_BIN" wallet --dir "$ISSUER" issue --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" \
+  printf '   $ %s\n' "$(q "$NY_BIN" wallet --dir "$ISSUER" issue --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" \
     --keys "$KEYS" --label "$1" --amount "$2" --public --max-supply "$3" \
     ${4:+--collection "$4"} --index "${5:-0}")" >&2
   if [ "$DRY_RUN" = 1 ]; then printf '<asset_id> <issuance_msg_id>'; return 0; fi
-  out=$(nj wallet --dir "$ISSUER" issue --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
+  out=$(ny wallet --dir "$ISSUER" issue --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
     --label "$1" --amount "$2" --public --max-supply "$3" \
     ${4:+--collection "$4"} --index "${5:-0}" 2>&1) || { echo "$out" >&2; fail "issue $1"; }
   mid=$(printf '%s' "$out" | sed -n 's/.*msg_id \([0-9a-f]\{64\}\).*/\1/p' | head -1)
@@ -328,13 +328,13 @@ issue_public() {  # label amount max_supply collection index -> "asset_id msg_id
 }
 
 name_asset() {    # asset_id issuance_msg_id name symbol decimals uri
-  run "$NJ_BIN" wallet --dir "$ISSUER" name-asset --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" \
+  run "$NY_BIN" wallet --dir "$ISSUER" name-asset --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" \
     --asset "$1" --issuance "$2" --name "$3" --symbol "$4" --decimals "$5" --uri "$6" \
     || fail "name-asset $3 — if it reports the asset is already named, ASSET is first-valid-wins and there is no second chance (spec/transition-v0.md section 9 step 4)"
 }
 
 pay_asset() {     # asset_id amount recipient
-  run "$NJ_BIN" wallet --dir "$ISSUER" pay --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
+  run "$NY_BIN" wallet --dir "$ISSUER" pay --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
     --asset "$1" --amount "$2" --recipient "$3" || fail "pay $1"
 }
 
@@ -343,7 +343,7 @@ pay_asset() {     # asset_id amount recipient
 # thing anyone published to the channel.
 newest_open() {   # asset_id -> position
   [ "$DRY_RUN" = 1 ] && { printf '<position of the published order>'; return 0; }
-  nj wallet --dir "$ISSUER" orders --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
+  ny wallet --dir "$ISSUER" orders --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
     | awk -v a="$1" '$3=="open" && $5==a {print $2}' | sort -n | tail -1
 }
 
@@ -352,24 +352,24 @@ newest_open() {   # asset_id -> position
 
 init_wallets() {
   KEYS="$DEVNET/keys"
-  ISSUER="${NIGHTJAR_EXAMPLE_ISSUER:-$DEVNET/examples-issuer}"
-  BUYER="${NIGHTJAR_EXAMPLE_BUYER:-$DEVNET/examples-buyer}"
-  TREASURY="${NIGHTJAR_DEVNET_TREASURY:-$DEVNET/treasury}"
+  ISSUER="${NYCTIS_EXAMPLE_ISSUER:-$DEVNET/examples-issuer}"
+  BUYER="${NYCTIS_EXAMPLE_BUYER:-$DEVNET/examples-buyer}"
+  TREASURY="${NYCTIS_DEVNET_TREASURY:-$DEVNET/treasury}"
   preflight
   if [ "$DRY_RUN" = 1 ]; then
     CHANNEL_UA="<channel UA>"; CHANNEL_UIVK="<channel uivk>"
-    BUYER_NJ="<buyer nj-address>"; TREASURY_UIVK="<treasury uivk>"
-    [ -n "$RECIPIENT" ] || RECIPIENT="$BUYER_NJ"
+    BUYER_NY="<buyer ny-address>"; TREASURY_UIVK="<treasury uivk>"
+    [ -n "$RECIPIENT" ] || RECIPIENT="$BUYER_NY"
     return 0
   fi
   mkdir -p "$ISSUER" "$BUYER"
-  CHANNEL_UA=$(nj wallet --dir "$DEVNET/channel" address | tail -1)
-  CHANNEL_UIVK=$(nj wallet --dir "$DEVNET/channel" uivk | tail -1)
-  TREASURY_UIVK=$(nj wallet --dir "$TREASURY" uivk | tail -1)
-  nj wallet --dir "$ISSUER" nj-address >/dev/null
-  BUYER_NJ=$(nj wallet --dir "$BUYER" nj-address | sed -n 's/^address //p')
-  [ -n "$BUYER_NJ" ] || fail "could not read the buyer's nj-address"
-  [ -n "$RECIPIENT" ] || RECIPIENT="$BUYER_NJ"
+  CHANNEL_UA=$(ny wallet --dir "$DEVNET/channel" address | tail -1)
+  CHANNEL_UIVK=$(ny wallet --dir "$DEVNET/channel" uivk | tail -1)
+  TREASURY_UIVK=$(ny wallet --dir "$TREASURY" uivk | tail -1)
+  ny wallet --dir "$ISSUER" ny-address >/dev/null
+  BUYER_NY=$(ny wallet --dir "$BUYER" ny-address | sed -n 's/^address //p')
+  [ -n "$BUYER_NY" ] || fail "could not read the buyer's ny-address"
+  [ -n "$RECIPIENT" ] || RECIPIENT="$BUYER_NY"
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -384,23 +384,23 @@ sell_and_buy() {  # asset_id amount price_zatoshi what
 
   say "$what: the issuer reserves it for the buyer at $price zatoshi"
   # `--buyer` is not optional and `wallet sell` has no openly fillable form (F5): ZEC never
-  # enters Nightjar, so on an open order two buyers filling in one block both pay and only the
+  # enters Nyctis, so on an open order two buyers filling in one block both pay and only the
   # lower (height, tx_index) is applied. `--expires-in` time-locks the seller's cancel, without
   # which the seller reads the payment in the mempool and self-spends at a higher fee.
-  printf '   $ %s\n' "$(q "$NJ_BIN" wallet --dir "$ISSUER" sell --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" \
-    --keys "$KEYS" --asset "$asset" --amount "$amount" --price "$price" --buyer "$BUYER_NJ" --expires-in 500)"
+  printf '   $ %s\n' "$(q "$NY_BIN" wallet --dir "$ISSUER" sell --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" \
+    --keys "$KEYS" --asset "$asset" --amount "$amount" --price "$price" --buyer "$BUYER_NY" --expires-in 500)"
   if [ "$DRY_RUN" = 1 ]; then
     order_uivk="<the PER-ORDER uivk sell prints>"
   else
-    sell=$(nj wallet --dir "$ISSUER" sell --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
-      --asset "$asset" --amount "$amount" --price "$price" --buyer "$BUYER_NJ" --expires-in 500) \
+    sell=$(ny wallet --dir "$ISSUER" sell --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
+      --asset "$asset" --amount "$amount" --price "$price" --buyer "$BUYER_NY" --expires-in 500) \
       || fail "sell $asset"
     order_uivk=$(printf '%s' "$sell" | sed -n 's/^ *seller-uivk *//p')
     [ -n "$order_uivk" ] || fail "sell printed no per-order uivk"
     # F16: the order's viewing key must not be the issuer's account-level one. A published NOTE
     # carries the policy verbatim, and a `zec()` leaf naming the account key would hand every
     # reader of the channel the incoming viewing key to that wallet's whole Zcash history.
-    [ "$order_uivk" != "$(nj wallet --dir "$ISSUER" uivk | tail -1)" ] \
+    [ "$order_uivk" != "$(ny wallet --dir "$ISSUER" uivk | tail -1)" ] \
       || fail "sell published the account-level uivk (F16)"
   fi
   bury
@@ -409,7 +409,7 @@ sell_and_buy() {  # asset_id amount price_zatoshi what
   # (kind 0x03) is what puts it in the order book — it changes no state a verifier consults and
   # is purely how a maker tells a buyer where to look (`spec/transition-v0.md` section 7).
   say "$what: publishing the reservation so the buyer can find it"
-  run "$NJ_BIN" wallet --dir "$ISSUER" publish --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
+  run "$NY_BIN" wallet --dir "$ISSUER" publish --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
     || fail "publish"
   bury
 
@@ -420,7 +420,7 @@ sell_and_buy() {  # asset_id amount price_zatoshi what
   # The ZEC is paid in the very Zcash transaction that carries the transition, and the verifier
   # checks the claim against that transaction. `--seller-uivk` is the per-order key the seller
   # printed; the buyer needs it to construct a payment the claim will recognise.
-  run "$NJ_BIN" wallet --dir "$BUYER" buy --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
+  run "$NY_BIN" wallet --dir "$BUYER" buy --to "$CHANNEL_UA" --uivk "$CHANNEL_UIVK" --keys "$KEYS" \
     --position "$position" --seller-uivk "$order_uivk" || fail "buy $asset"
   bury
 }

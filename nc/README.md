@@ -58,8 +58,8 @@ its own cap. The twin is *detectable*, which is the whole difference: it has a d
 ## The transfer policy: `pk(owner)`, and nothing else
 
 `wallet issue` and `wallet pay` both build the output note with
-`account.address().default_policy()` (`crates/nightjar-cli/src/main.rs:558`, `:610`), which is
-one line: `Policy::Key(self.ak)` (`crates/nightjar-zk/src/keys.rs:230`).
+`account.address().default_policy()` (`crates/nyctis-cli/src/main.rs:558`, `:610`), which is
+one line: `Policy::Key(self.ak)` (`crates/nyctis-zk/src/keys.rs:230`).
 
 That is the whole policy of a NightCash note. 34 bytes. One leaf. **A fungible asset needs no
 clever policy**, because the asset semantics live in `terms` and in the circuit's conservation
@@ -80,7 +80,7 @@ There is no "mint policy". Minting is a key the issuer holds, not a clause anybo
 note, and there is nowhere in a policy to write it down. What a policy governs is the note the
 issuer puts **up for sale**, and `sale.roost` has the two the shipped CLI builds.
 
-**Reservation** — `programs::reservation_policy` (`crates/nightjar-cli/src/programs.rs:223`),
+**Reservation** — `programs::reservation_policy` (`crates/nyctis-cli/src/programs.rs:223`),
 driven by `wallet sell` and `wallet buy`:
 
 ```
@@ -89,7 +89,7 @@ pk(S) && after(h_exp) || (pk(B) && zec(H_order, price))
 
 A named buyer takes the lot by paying ZEC in the same Zcash transaction that carries the
 transition. Both halves were missing from the first shipped `sell` and each absence lost money
-(F5). `pk(B)` names the buyer, because ZEC never enters Nightjar and this protocol cannot refuse a
+(F5). `pk(B)` names the buyer, because ZEC never enters Nyctis and this protocol cannot refuse a
 Zcash payment — on an openly fillable order two buyers filling in one block both pay while only
 the lower `(height, tx_index)` is applied, and the loser forfeits the price, not a fee.
 `after(h_exp)` time-locks the seller's cancel, because a channel's viewing key is published and an
@@ -171,7 +171,7 @@ id in a README is a claim about one deployment at one moment, and a reader of it
 the channel you ran this against:
 
 ```sh
-./target/release/nightjar assets --uivk <channel uivk> --keys .devnet/keys
+./target/release/nyctis assets --uivk <channel uivk> --keys .devnet/keys
 curl -s http://127.0.0.1:8787/api/assets | jq '.items[] | select(.symbol=="NC")'
 ```
 

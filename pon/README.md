@@ -12,7 +12,7 @@ mint.sh            two messages per member, one document for all of them
 
 ## What a collection is on the channel
 
-**A Nightjar collection needs no new protocol**, and that sentence is the whole design rather
+**A Nyctis collection needs no new protocol**, and that sentence is the whole design rather
 than a boast. A unique item is an ordinary public asset with `max_supply = 1`, and the cap is
 hashed into the asset's identity, so *there is only one of these* is checked by every verifier
 rather than claimed in a file. Members are grouped by `collection_id`, derived from the issuer's
@@ -73,7 +73,7 @@ chooses the policy of the note they create next.
 
 ## The sale policy, and what a collection cannot use
 
-Selling a piece is `programs::reservation_policy` (`crates/nightjar-cli/src/programs.rs:223`) with
+Selling a piece is `programs::reservation_policy` (`crates/nyctis-cli/src/programs.rs:223`) with
 `amount 1` — the identical four lines that sell a lot of NightCash. There is no NFT-specific sale
 mechanism and `sale.roost` is not hiding one; `../nc/README.md` documents F5, F14 and F16 at
 length and all of it applies unchanged.
@@ -231,7 +231,7 @@ deployment at one moment. The member count is worse still: it is not fixed even 
 because a collection is launched rather than completed. Ask the channel:
 
 ```sh
-./target/release/nightjar assets --uivk <channel uivk> --keys .devnet/keys
+./target/release/nyctis assets --uivk <channel uivk> --keys .devnet/keys
 curl -s http://127.0.0.1:8787/api/assets | jq '.items[] | select(.symbol=="PON")'
 ```
 

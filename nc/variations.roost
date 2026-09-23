@@ -1,8 +1,8 @@
 // NightCash — variations. **Nothing in this file is deployed and nothing in this file is built
-// by any command of the Nightjar CLI.**
+// by any command of the Nyctis CLI.**
 //
 // It is here because "the deployed note carries `pk(owner)`" invites the reader to conclude that
-// a Nightjar note *can only* carry `pk(owner)`, and that is false. What is true is narrower and
+// a Nyctis note *can only* carry `pk(owner)`, and that is false. What is true is narrower and
 // more useful: the asset's rules — its cap, its divisibility, its collection — are enforced by
 // `asset_id` and the circuit, so a fungible asset needs no policy to be a fungible asset. A
 // policy buys something else, and these are two examples of what.

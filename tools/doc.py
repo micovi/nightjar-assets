@@ -56,7 +56,7 @@ import tempfile
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 # The canonical base this repository's documents are written against. `retarget` replaces it.
-DEFAULT_BASE = "https://raw.githubusercontent.com/micovi/nightjar-assets/main/"
+DEFAULT_BASE = "https://raw.githubusercontent.com/micovi/nyctis-assets/main/"
 
 # `spec/transition-v0.md` section 9: an ASSET message's `uri` is at most 255 bytes of US-ASCII.
 # It is the ceiling of the wire format rather than a chosen number: `uri_len` is a `u8`, so
@@ -403,7 +403,7 @@ def verify(base: str) -> int:
     nc = load("nc/a.json")
     nc_bytes = (ROOT / "nc/a.json").stat().st_size
     r.check(nc_bytes <= DOC_MAX, f"document {nc_bytes} of {DOC_MAX} bytes")
-    r.check(nc["schema"] == "nightjar-asset-metadata/1", f"schema {nc['schema']}")
+    r.check(nc["schema"] == "nyctis-asset-metadata/1", f"schema {nc['schema']}")
     logo = ROOT / "nc/logo.png"
     r.check(nc["logo"]["b2"] == b2(logo), "logo.b2 matches nc/logo.png")
     r.check(logo.stat().st_size <= LOGO_MAX, f"logo {logo.stat().st_size} of {LOGO_MAX} bytes")
@@ -412,7 +412,7 @@ def verify(base: str) -> int:
     print("pon/c.json — spec/asset-collection-v0.md")
     pon_bytes = (ROOT / "pon/c.json").stat().st_size
     r.check(pon_bytes <= DOC_MAX, f"document {pon_bytes} of {DOC_MAX} bytes")
-    r.check(pon["schema"] == "nightjar-collection-metadata/1", f"schema {pon['schema']}")
+    r.check(pon["schema"] == "nyctis-collection-metadata/1", f"schema {pon['schema']}")
     plogo = ROOT / "pon/logo.png"
     r.check(pon["logo"]["b2"] == b2(plogo), "logo.b2 matches pon/logo.png")
     r.check(plogo.stat().st_size <= LOGO_MAX, f"logo {plogo.stat().st_size} of {LOGO_MAX} bytes")
@@ -717,7 +717,7 @@ def selftest() -> int:
     t = Selftest()
 
     with tempfile.TemporaryDirectory() as tmp:
-        work = pathlib.Path(tmp) / "nightjar-assets"
+        work = pathlib.Path(tmp) / "nyctis-assets"
         work.mkdir(parents=True)
         for d in ("nc", "pon"):
             shutil.copytree(home / d, work / d)
@@ -992,7 +992,7 @@ def main() -> int:
     v = sub.add_parser("verify", help="check every digest, every limit and the uri budget")
     v.add_argument("--base", default=None, help=f"base URL the documents are published under (default: read from the documents)")
     rt = sub.add_parser("retarget", help="point both documents at a different fork")
-    rt.add_argument("--base", required=True, help="e.g. https://raw.githubusercontent.com/you/nightjar-assets/main/")
+    rt.add_argument("--base", required=True, help="e.g. https://raw.githubusercontent.com/you/nyctis-assets/main/")
     dg = sub.add_parser("digests", help="recompute pon/c.json's digests from pon/art/")
     dg.add_argument(
         "--table",

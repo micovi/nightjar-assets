@@ -1,7 +1,7 @@
 // Phases of One Night — variations. **Nothing in this file is deployed and nothing in this file
-// is built by any command of the Nightjar CLI.**
+// is built by any command of the Nyctis CLI.**
 //
-// The two things people expect an NFT standard to provide and Nightjar does not: an enforced
+// The two things people expect an NFT standard to provide and Nyctis does not: an enforced
 // royalty, and a transfer the issuer can gate. Both are writable as note policies, neither is
 // a property of the asset, and the difference matters — a policy travels with *this note*, and
 // the moment the note is spent under a clause that does not re-impose it, it is gone.

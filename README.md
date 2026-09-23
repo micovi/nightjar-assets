@@ -1,6 +1,6 @@
-# nightjar-assets
+# nyctis-assets
 
-Two worked examples of putting an asset on a [Nightjar](https://github.com/micovi/nightjar)
+Two worked examples of putting an asset on a [Nyctis](https://github.com/micovi/nyctis)
 channel: a fungible token and a collection of unique pieces. Each one is a directory holding
 everything that example needs — its metadata document, its artwork, its note policies in Roost,
 and a script that sends the messages.
@@ -14,7 +14,7 @@ A unit of money and a unique piece of art are, in this protocol, almost the same
 `nc/transfer.roost` and `pon/transfer.roost` together: identical policy, identical 34 bytes,
 identical Poseidon377 root. Everything that distinguishes them is in `asset_id`.
 
-Both sequences have been run end to end — issue, name, pay, sell, buy — against a Nightjar
+Both sequences have been run end to end — issue, name, pay, sell, buy — against a Nyctis
 channel on a **local Zcash test network** (regtest), which is not Zcash's public testnet and not
 mainnet.
 
@@ -24,8 +24,8 @@ Each example ships a `mint.sh` that does the whole sequence, and takes `--dry-ru
 no node, sends nothing, and prints the exact commands:
 
 ```sh
-nc/mint.sh  --dry-run --base-url https://raw.githubusercontent.com/micovi/nightjar-assets/main/
-pon/mint.sh --dry-run --base-url https://raw.githubusercontent.com/micovi/nightjar-assets/main/
+nc/mint.sh  --dry-run --base-url https://raw.githubusercontent.com/micovi/nyctis-assets/main/
+pon/mint.sh --dry-run --base-url https://raw.githubusercontent.com/micovi/nyctis-assets/main/
 ```
 
 Every command block in the three READMEs of this repository is `--dry-run` output. A command
@@ -36,8 +36,8 @@ message signs is computed from the document published at that URL, so a script t
 one GitHub account would be a worked example for nobody else. `tools/doc.py retarget --base <url>`
 rewrites the absolute URLs inside the documents to match.
 
-To actually send anything you need a Nightjar node of your own on a local Zcash test network
-(`infra/README.md` in the Nightjar repository), `cargo build --release -p nightjar-cli`, and
+To actually send anything you need a Nyctis node of your own on a local Zcash test network
+(`infra/README.md` in the Nyctis repository), `cargo build --release -p nyctis-cli`, and
 proving keys in `.devnet/keys`.
 
 Check the documents against the files they point at, at any time, with no network:
@@ -47,10 +47,10 @@ tools/doc.py verify
 ```
 
 Check the note policies — every `.roost` file here carries executable tests, and `check` runs
-them. From the Nightjar repository root:
+them. From the Nyctis repository root:
 
 ```sh
-cargo run -p nightjar-lang --bin roost -- check ../nightjar-assets/nc/transfer.roost
+cargo run -p nyctis-lang --bin roost -- check ../nyctis-assets/nc/transfer.roost
 ```
 
 ## The layout, and why you only get to choose it once
@@ -102,7 +102,7 @@ layout. `uri_len ≤ 255` (`spec/transition-v0.md` §9) and a `#b2=` pin costs 4
 leaving **208 for scheme, host and path**. The canonical base here is 62 of them:
 
 ```
-https://raw.githubusercontent.com/micovi/nightjar-assets/main/     62
+https://raw.githubusercontent.com/micovi/nyctis-assets/main/     62
                                                      nc/a.json     71  + 47 = 118
                                                     pon/c.json     72  + 47 = 119
              examples/02-collection/metadata/collection.json      109  + 47 = 156
@@ -110,7 +110,7 @@ https://raw.githubusercontent.com/micovi/nightjar-assets/main/     62
 
 255 is the ceiling of the wire format rather than a number somebody picked: `uri_len` is a `u8`,
 so nothing larger can be expressed at all. A fork whose owner or repository name is much longer
-than `micovi/nightjar-assets` has less room than the table above.
+than `micovi/nyctis-assets` has less room than the table above.
 
 **A document too deep to carry its pin is a document that cannot be pinned.** It does not become
 silently unpinned: without the pin, whoever controls the host can swap the document under an
@@ -148,7 +148,7 @@ commands below are the only answer that is true on the day it is read.
 Nothing below needs this repository to be trusted; that is the point of running it.
 
 ```sh
-nightjar assets --uivk <channel uivk> --keys .devnet/keys
+nyctis assets --uivk <channel uivk> --keys .devnet/keys
 curl -s http://127.0.0.1:8787/api/assets | jq '.items[] | {asset_id, name, symbol, index, collection_id, max_supply, uri}'
 ```
 
